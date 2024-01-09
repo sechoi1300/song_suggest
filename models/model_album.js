@@ -6,7 +6,7 @@ const AlbumSchema = new mongoose.Schema({
         required: true
     },
     artist: {
-        type: String,
+        type: Array,
         required: true
     },
     released_date: {
