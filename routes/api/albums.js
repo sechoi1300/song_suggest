@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 
-const Album = require('../../models/Albums');
+const Album = require('../../models/model_album');
 
 // @route   GET api/album/test
 // @desc    Tests albums route
