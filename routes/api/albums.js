@@ -35,3 +35,24 @@ router.post('/', (req, res) => {
         .catch(err => res.status(400).json({ error: 'Unable to add this album' }));
 });
 
+// @route   PUT api/albums/:id
+// @desc    Update book by id
+// @access  Public
+router.put('/:id', (req, res) => {
+    Album.findByIdAndUpdate(req.params.id, req.body)
+        .then(album => res.json({ msg: 'Updated successfully' }))
+        .catch(err =>
+            res.status(400).json({ error: 'Unable to update the Database' })
+        );
+});
+
+// @route   DELETE api/albums/:id
+// @desc    Delete album by id
+// @access  Public
+router.delete('/:id', (req, res) => {
+    Album.findByIdAndDelete(req.params.id)
+        .then(album => res.json({ mgs: 'Album entry deleted successfully' }))
+        .catch(err => res.status(404).json({ error: 'No such album' }));
+});
+  
+module.exports = router;
