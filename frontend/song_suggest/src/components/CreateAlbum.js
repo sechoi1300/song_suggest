@@ -13,7 +13,6 @@ const CreateAlbum = (props) => {
         length: "",
         num_of_songs: "",
         genres: "",
-        updated_date: "",
     });
 
     const onChange = (e) => {
@@ -32,7 +31,6 @@ const CreateAlbum = (props) => {
                     length: "",
                     num_of_songs: "",
                     genres: "",
-                    updated_date: "",
                 });
             navigate("/");
             })
@@ -117,17 +115,6 @@ const CreateAlbum = (props) => {
                                     name="genres"
                                     className="form-control"
                                     value={album.genres}
-                                    onChange={onChange}
-                                />
-                            </div>
-                            <br />
-                            <div className="form-group">
-                                <input
-                                    type="date"
-                                    placeholder="Updated Date"
-                                    name="updated_date"
-                                    className="form-control"
-                                    value={album.updated_date}
                                     onChange={onChange}
                                 />
                             </div>
