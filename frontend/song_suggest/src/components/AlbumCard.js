@@ -19,7 +19,7 @@ const AlbumCard = ({album}) => {
                 {Array.isArray(album.artist)
                     ? album.artist.join(', ')
                     : album.artist
-        }
+                }
             </h3>
             <p>{album.description}</p>
         </div>
