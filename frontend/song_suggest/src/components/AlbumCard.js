@@ -21,7 +21,7 @@ const AlbumCard = ({album}) => {
                     : album.artist
                 }
             </h3>
-            <p>{album.description}</p>
+            <p>{album.released_date}</p>
         </div>
         </div>
     );
