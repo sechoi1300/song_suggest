@@ -14,7 +14,7 @@ const AlbumSchema = new mongoose.Schema({
         required: true
     },
     length: {
-        type: Number,
+        type: String,
         required: true
     },
     num_of_songs: {
