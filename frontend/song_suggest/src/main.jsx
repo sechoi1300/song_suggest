@@ -13,9 +13,9 @@ import UpdateAlbumInfo from "./components/UpdateAlbumInfo";
 
 const router = createBrowserRouter([
   { path: "/", element: <ShowAlbumList /> },
-  { path: "/create-book", element: <CreateAlbum /> },
-  { path: "/show-book/:id", element: <ShowAlbumDetails /> },
-  { path: "/edit-book/:id", element: <UpdateAlbumInfo /> },
+  { path: "/create-album", element: <CreateAlbum /> },
+  { path: "/show-album/:id", element: <ShowAlbumDetails /> },
+  { path: "/edit-album/:id", element: <UpdateAlbumInfo /> },
 ]);
 
 ReactDOM.createRoot(document.getElementById('root')).render(
