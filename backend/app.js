@@ -11,7 +11,7 @@ app.use(cors({ origin: true, credentials: true }));
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 
-app.use("/api/books", routes);
+app.use("/api/albums", routes);
 
 connectDB();
 
