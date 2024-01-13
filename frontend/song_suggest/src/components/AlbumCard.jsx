@@ -21,7 +21,7 @@ const AlbumCard = ({album}) => {
                     : album.artist
                 }
             </h3>
-            <p>{album.released_date}</p>
+            <p>{new Date(album.released_date).toLocaleDateString()}</p>
         </div>
         </div>
     );

@@ -53,7 +53,7 @@ function ShowAlbumDetails(props) {
                     <tr>
                         <th scope='row'>3</th>
                         <td>Release Date</td>
-                        <td>{album.released_date}</td>
+                        <td>{new Date(album.released_date).toLocaleDateString()}</td>
                     </tr>
                     <tr>
                         <th scope='row'>4</th>
