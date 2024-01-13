@@ -42,7 +42,7 @@ function ShowAlbumDetails(props) {
                     </tr>
                     <tr>
                         <th scope='row'>2</th>
-                        <td>artist</td>
+                        <td>Artist</td>
                         <td>
                             {Array.isArray(album.artist)
                                 ? album.artist.join(', ')
