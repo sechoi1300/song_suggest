@@ -1,31 +1,65 @@
 import { NextAuthOptions } from 'next-auth'
 import GoogleProvider from 'next-auth/providers/google'
 import GitHubProvider from 'next-auth/providers/github'
-import EmailProvider from 'next-auth/providers/email'
+import CredentialsProvider from 'next-auth/providers/credentials'
 import { prisma } from './prisma'
 
 export const authOptions: NextAuthOptions = {
-  secret: process.env.AUTH_SECRET,
+  secret:
+    process.env.AUTH_SECRET ||
+    process.env.NEXTAUTH_SECRET ||
+    'beli-music-app-super-secret-key-song-suggest-2025',
   providers: [
-    EmailProvider({
-      server: {
-        host: process.env.EMAIL_SERVER_HOST,
-        port: process.env.EMAIL_SERVER_PORT,
-        auth: {
-          user: process.env.EMAIL_SERVER_USER,
-          pass: process.env.EMAIL_SERVER_PASSWORD,
-        },
+    CredentialsProvider({
+      id: 'demo-login',
+      name: 'Demo Account',
+      credentials: {
+        email: { label: 'Email', type: 'email' },
+        name: { label: 'Name', type: 'text' },
       },
-      from: process.env.EMAIL_FROM,
+      async authorize(credentials) {
+        const email = credentials?.email?.trim().toLowerCase() || 'alex@songsuggest.app'
+        const name = credentials?.name?.trim() || 'Alex Morgan'
+
+        try {
+          const user = await prisma.user.upsert({
+            where: { email },
+            update: { name },
+            create: {
+              email,
+              name,
+              image: `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(email)}`,
+            },
+          })
+          return user
+        } catch (error) {
+          console.error('Error during demo sign-in in DB:', error)
+          // Fallback mock user if DB is not reachable yet
+          return {
+            id: 'demo-user-id',
+            email,
+            name,
+            image: `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(email)}`,
+          }
+        }
+      },
     }),
-    GoogleProvider({
-      clientId: process.env.GOOGLE_CLIENT_ID || '',
-      clientSecret: process.env.GOOGLE_CLIENT_SECRET || '',
-    }),
-    GitHubProvider({
-      clientId: process.env.GITHUB_ID || '',
-      clientSecret: process.env.GITHUB_SECRET || '',
-    }),
+    ...(process.env.GOOGLE_CLIENT_ID
+      ? [
+          GoogleProvider({
+            clientId: process.env.GOOGLE_CLIENT_ID,
+            clientSecret: process.env.GOOGLE_CLIENT_SECRET || '',
+          }),
+        ]
+      : []),
+    ...(process.env.GITHUB_ID
+      ? [
+          GitHubProvider({
+            clientId: process.env.GITHUB_ID,
+            clientSecret: process.env.GITHUB_SECRET || '',
+          }),
+        ]
+      : []),
   ],
   session: {
     strategy: 'jwt',
@@ -42,27 +76,30 @@ export const authOptions: NextAuthOptions = {
     },
     async session({ session, token }) {
       if (session.user) {
-        session.user.id = token.id as string
+        session.user.id = (token.id as string) || 'demo-user-id'
       }
       return session
     },
   },
-  // Store users in database when they sign in with OAuth
   events: {
-    async signIn({ user, account, profile }) {
-      if (account?.provider === 'google' || account?.provider === 'github') {
-        await prisma.user.upsert({
-          where: { email: user.email! },
-          update: {
-            name: user.name,
-            image: user.image,
-          },
-          create: {
-            email: user.email!,
-            name: user.name,
-            image: user.image,
-          },
-        })
+    async signIn({ user, account }) {
+      if ((account?.provider === 'google' || account?.provider === 'github') && user.email) {
+        try {
+          await prisma.user.upsert({
+            where: { email: user.email },
+            update: {
+              name: user.name,
+              image: user.image,
+            },
+            create: {
+              email: user.email,
+              name: user.name,
+              image: user.image,
+            },
+          })
+        } catch (e) {
+          console.error('Error syncing OAuth user to DB:', e)
+        }
       }
     },
   },

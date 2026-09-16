@@ -10,16 +10,18 @@ datasource db {
 }
 
 model User {
-  id            String    @id @default(cuid())
+  id            String         @id @default(cuid())
   name          String?
-  email         String    @unique
+  email         String         @unique
   emailVerified DateTime?
   image         String?
+  bio           String?
   accounts      Account[]
   sessions      Session[]
   reviews       Review[]
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
+  wantToListen  WantToListen[]
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
 }
 
 model Account {
@@ -58,34 +60,60 @@ model VerificationToken {
 }
 
 model Album {
-  id           String    @id @default(cuid())
-  title        String
-  artist       String[]  // Array of artist names
-  releaseDate  DateTime
-  length       String?   // e.g., "45:30"
-  numSongs     Int?
-  genres       String[]  // Array of genre names
+  id            String         @id @default(cuid())
+  title         String
+  artist        String[]       // Array of artist names
+  releaseDate   DateTime
+  releaseYear   Int?
+  length        String?        // e.g., "45:30"
+  numSongs      Int?
+  genres        String[]       // Array of genre names
   coverImageUrl String?
-  reviews      Review[]
-  createdAt    DateTime  @default(now())
-  updatedAt    DateTime  @updatedAt
+  spotifyUrl    String?
+  tracklist     String[]       // Array of track titles
+  reviews       Review[]
+  wantToListen  WantToListen[]
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
 
   @@index([title])
   @@index([genres])
 }
 
 model Review {
-  id         String   @id @default(cuid())
-  userId     String
-  albumId    String
-  rating     Int      // 0-10 scale
-  reviewText String?  @db.Text
-  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  album      Album    @relation(fields: [albumId], references: [id], onDelete: Cascade)
-  createdAt  DateTime @default(now())
-  updatedAt  DateTime @updatedAt
+  id             String   @id @default(cuid())
+  userId         String
+  albumId        String
+  rating         Float    // 0.0-10.0 scale (Beli exact decimal score, e.g. 9.3)
+  rank           Int?     // Personal leaderboard rank (#1, #2, #3, ...)
+  tier           String?  // "EXCEPTIONAL" (9.0+), "GREAT" (8.0-8.9), "GOOD" (7.0-7.9), "MEDIOCRE" (6.0-6.9), "SKIP" (<6.0)
+  favoriteTracks String[] // Standout tracks chosen by user
+  skipTrack      String?  // Least favorite track
+  vibes          String[] // Moods/vibes e.g. ["Late Night", "Melancholy", "Summer Drive", "Focus"]
+  listenAgain    String?  // "DEFINITELY", "MAYBE", "NO"
+  listenedWith   String?  // "Headphones", "Vinyl", "Car", "Late Night", etc.
+  reviewText     String?  @db.Text
+  user           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  album          Album    @relation(fields: [albumId], references: [id], onDelete: Cascade)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
 
   @@unique([userId, albumId]) // One review per user per album
   @@index([albumId])
   @@index([userId])
+}
+
+model WantToListen {
+  id        String   @id @default(cuid())
+  userId    String
+  albumId   String
+  notes     String?  // e.g. "Friend recommendation", "Grammy nominee"
+  priority  String?  // "HIGH", "NORMAL", "LOW"
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  album     Album    @relation(fields: [albumId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+
+  @@unique([userId, albumId])
+  @@index([userId])
+  @@index([albumId])
 }
