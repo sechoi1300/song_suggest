@@ -1,12 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import {
-  calculateScoreFromRankPlacement,
-  getTierFromScore,
-  BELI_TIERS,
-  TierInfo,
-} from '@/lib/beli'
+import { calculateScoreFromRankPlacement } from '@/lib/beli'
 
 export interface ExistingRankedAlbum {
   albumId: string
@@ -85,22 +80,18 @@ export default function HeadToHeadRanker({
   }
 
   return (
-    <div className="bg-slate-900 border border-violet-500/30 rounded-2xl p-6 shadow-2xl relative overflow-hidden">
-      {/* Background Glow */}
-      <div className="absolute -top-24 -left-24 w-60 h-60 bg-violet-600/20 rounded-full blur-3xl pointer-events-none" />
-      <div className="absolute -bottom-24 -right-24 w-60 h-60 bg-fuchsia-600/20 rounded-full blur-3xl pointer-events-none" />
-
+    <div className="bg-[#F5F1E9] border border-[#E3DCCE] rounded-2xl p-6 shadow-xs relative">
       {/* Header */}
       <div className="text-center mb-6 relative">
-        <div className="inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-violet-500/10 border border-violet-500/20 text-violet-400 text-xs font-semibold mb-2">
+        <div className="inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-[#EAE4D9] border border-[#D9D1C3] text-stone-800 text-xs font-medium mb-2">
           <span>⚔️ Head-to-Head Ranking</span>
           <span>•</span>
           <span>Match {round} of ~{estimatedRounds}</span>
         </div>
-        <h3 className="text-2xl font-black text-white tracking-tight">
+        <h3 className="text-2xl font-black text-stone-900 tracking-tight">
           Which album do you prefer?
         </h3>
-        <p className="text-slate-400 text-sm mt-1">
+        <p className="text-stone-600 text-sm mt-1">
           Pick your favorite to pinpoint where it slots into your personal leaderboard.
         </p>
       </div>
@@ -111,28 +102,28 @@ export default function HeadToHeadRanker({
         <button
           type="button"
           onClick={() => handleChoice('CURRENT')}
-          className="group relative bg-slate-950/80 hover:bg-violet-950/30 border border-slate-800 hover:border-violet-500/60 rounded-2xl p-5 text-left transition-all duration-200 hover:scale-[1.02] active:scale-[0.99] flex flex-col justify-between cursor-pointer"
+          className="group relative bg-white hover:bg-stone-50 border border-[#EAE4D9] hover:border-stone-400 rounded-2xl p-5 text-left transition-all duration-200 hover:scale-[1.01] active:scale-[0.99] flex flex-col justify-between cursor-pointer shadow-xs"
         >
           <div className="flex items-center space-x-4 mb-4">
             {currentAlbum.coverImageUrl ? (
               <img
                 src={currentAlbum.coverImageUrl}
                 alt={currentAlbum.title}
-                className="w-20 h-20 rounded-xl object-cover shadow-lg border border-slate-700/50"
+                className="w-20 h-20 rounded-xl object-cover shadow-sm border border-[#EAE4D9]"
               />
             ) : (
-              <div className="w-20 h-20 rounded-xl bg-gradient-to-br from-violet-600 to-fuchsia-600 flex items-center justify-center text-white text-2xl font-black">
+              <div className="w-20 h-20 rounded-xl bg-[#EAE4D9] flex items-center justify-center text-stone-700 text-2xl font-bold">
                 {currentAlbum.title.charAt(0)}
               </div>
             )}
             <div className="flex-1 min-w-0">
-              <span className="inline-block text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded bg-violet-500/20 text-violet-300 mb-1">
+              <span className="inline-block text-[10px] uppercase font-semibold tracking-wider px-2 py-0.5 rounded bg-[#EAE4D9] text-stone-800 mb-1">
                 New Album
               </span>
-              <h4 className="text-lg font-bold text-white truncate group-hover:text-violet-300 transition-colors">
+              <h4 className="text-lg font-bold text-stone-900 truncate group-hover:text-stone-700 transition-colors">
                 {currentAlbum.title}
               </h4>
-              <p className="text-sm text-slate-400 truncate">
+              <p className="text-sm text-stone-500 truncate">
                 {Array.isArray(currentAlbum.artist)
                   ? currentAlbum.artist.join(', ')
                   : currentAlbum.artist}
@@ -140,13 +131,13 @@ export default function HeadToHeadRanker({
             </div>
           </div>
 
-          <div className="w-full py-2.5 px-4 rounded-xl bg-violet-600/20 group-hover:bg-violet-600 text-violet-300 group-hover:text-white font-semibold text-sm text-center transition-all border border-violet-500/30">
+          <div className="w-full py-2.5 px-4 rounded-xl bg-stone-900 group-hover:bg-stone-800 text-stone-50 font-medium text-sm text-center transition-all shadow-xs">
             Prefer {currentAlbum.title} 👍
           </div>
         </button>
 
         {/* Center VS Badge */}
-        <div className="hidden md:flex absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-slate-800 border-2 border-slate-700 items-center justify-center font-black text-xs text-slate-300 z-10 shadow-xl">
+        <div className="hidden md:flex absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-9 h-9 rounded-full bg-[#EAE4D9] border-2 border-white items-center justify-center font-bold text-xs text-stone-700 z-10 shadow-xs">
           VS
         </div>
 
@@ -154,50 +145,50 @@ export default function HeadToHeadRanker({
         <button
           type="button"
           onClick={() => handleChoice('OPPONENT')}
-          className="group relative bg-slate-950/80 hover:bg-slate-800/60 border border-slate-800 hover:border-slate-600 rounded-2xl p-5 text-left transition-all duration-200 hover:scale-[1.02] active:scale-[0.99] flex flex-col justify-between cursor-pointer"
+          className="group relative bg-white hover:bg-stone-50 border border-[#EAE4D9] hover:border-stone-400 rounded-2xl p-5 text-left transition-all duration-200 hover:scale-[1.01] active:scale-[0.99] flex flex-col justify-between cursor-pointer shadow-xs"
         >
           <div className="flex items-center space-x-4 mb-4">
             {opponent.coverImageUrl ? (
               <img
                 src={opponent.coverImageUrl}
                 alt={opponent.title}
-                className="w-20 h-20 rounded-xl object-cover shadow-lg border border-slate-700/50"
+                className="w-20 h-20 rounded-xl object-cover shadow-sm border border-[#EAE4D9]"
               />
             ) : (
-              <div className="w-20 h-20 rounded-xl bg-gradient-to-br from-slate-700 to-slate-900 flex items-center justify-center text-white text-2xl font-black">
+              <div className="w-20 h-20 rounded-xl bg-[#EAE4D9] flex items-center justify-center text-stone-700 text-2xl font-bold">
                 {opponent.title.charAt(0)}
               </div>
             )}
             <div className="flex-1 min-w-0">
               <div className="flex items-center space-x-2 mb-1">
-                <span className="text-xs font-bold text-amber-400 bg-amber-400/10 px-1.5 py-0.5 rounded border border-amber-400/20">
+                <span className="text-xs font-semibold text-stone-800 bg-[#EAE4D9] px-2 py-0.5 rounded">
                   Rank #{opponent.rank}
                 </span>
-                <span className="text-xs font-bold text-slate-300">
+                <span className="text-xs font-semibold text-stone-700">
                   ★ {opponent.rating.toFixed(1)}
                 </span>
               </div>
-              <h4 className="text-lg font-bold text-white truncate group-hover:text-slate-200 transition-colors">
+              <h4 className="text-lg font-bold text-stone-900 truncate group-hover:text-stone-700 transition-colors">
                 {opponent.title}
               </h4>
-              <p className="text-sm text-slate-400 truncate">
+              <p className="text-sm text-stone-500 truncate">
                 {Array.isArray(opponent.artist) ? opponent.artist.join(', ') : opponent.artist}
               </p>
             </div>
           </div>
 
-          <div className="w-full py-2.5 px-4 rounded-xl bg-slate-800 group-hover:bg-slate-700 text-slate-300 group-hover:text-white font-semibold text-sm text-center transition-all border border-slate-700">
+          <div className="w-full py-2.5 px-4 rounded-xl bg-stone-900 group-hover:bg-stone-800 text-stone-50 font-medium text-sm text-center transition-all shadow-xs">
             Prefer {opponent.title} 👍
           </div>
         </button>
       </div>
 
       {/* Footer controls */}
-      <div className="mt-6 pt-4 border-t border-slate-800 flex items-center justify-between text-xs text-slate-400">
+      <div className="mt-6 pt-4 border-t border-[#EAE4D9] flex items-center justify-between text-xs text-stone-500">
         <button
           type="button"
           onClick={handleSkipOrEven}
-          className="hover:text-white transition-colors cursor-pointer"
+          className="hover:text-stone-900 transition-colors cursor-pointer"
         >
           They are about equal (Tie)
         </button>
@@ -205,7 +196,7 @@ export default function HeadToHeadRanker({
           <button
             type="button"
             onClick={onCancel}
-            className="text-slate-500 hover:text-slate-300 transition-colors cursor-pointer"
+            className="text-stone-500 hover:text-stone-800 transition-colors cursor-pointer"
           >
             Switch to Manual Rating
           </button>

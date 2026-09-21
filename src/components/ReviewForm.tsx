@@ -72,15 +72,15 @@ export default function ReviewForm({
 
   if (!session) {
     return (
-      <div className="bg-slate-900 border border-slate-800 rounded-2xl p-8 text-center text-slate-300">
+      <div className="bg-[#F5F1E9] border border-[#E3DCCE] rounded-2xl p-8 text-center text-stone-700">
         <span className="text-3xl mb-3 block">🎧</span>
-        <h3 className="text-xl font-bold text-white mb-2">Want to rate & rank this album?</h3>
-        <p className="text-slate-400 text-sm mb-6 max-w-sm mx-auto">
+        <h3 className="text-xl font-bold text-stone-900 mb-2">Want to rate & rank this album?</h3>
+        <p className="text-stone-600 text-sm mb-6 max-w-sm mx-auto">
           Sign in to place this album on your personal Beli leaderboard and unlock recommendations.
         </p>
         <Link
           href="/auth/signin"
-          className="inline-flex items-center px-6 py-2.5 rounded-xl bg-violet-600 hover:bg-violet-500 text-white font-semibold text-sm shadow-lg shadow-violet-600/30 transition-all cursor-pointer"
+          className="inline-flex items-center px-6 py-2.5 rounded-xl bg-stone-900 hover:bg-stone-800 text-stone-50 font-medium text-sm shadow-xs transition-colors cursor-pointer"
         >
           Sign In / Quick Demo
         </Link>
@@ -166,19 +166,19 @@ export default function ReviewForm({
   }
 
   return (
-    <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-xl">
+    <div className="bg-white border border-[#EAE4D9] rounded-2xl p-6 shadow-xs">
       {/* Top action bar: Queue bookmark or Head to Head button */}
-      <div className="flex flex-wrap items-center justify-between gap-3 mb-6 pb-4 border-b border-slate-800">
+      <div className="flex flex-wrap items-center justify-between gap-3 mb-6 pb-4 border-b border-[#EAE4D9]">
         <div>
-          <h3 className="text-xl font-bold text-white">Rate & Rank Album</h3>
-          <p className="text-xs text-slate-400">Add to your personal ranking & log listening notes</p>
+          <h3 className="text-xl font-bold text-stone-900">Rate & Rank Album</h3>
+          <p className="text-xs text-stone-500">Add to your personal ranking & log listening notes</p>
         </div>
         <div className="flex items-center space-x-2">
           {existingRankedAlbums.length > 0 && (
             <button
               type="button"
               onClick={() => setMode('HEAD_TO_HEAD')}
-              className="inline-flex items-center px-3.5 py-1.5 rounded-xl bg-violet-600/20 hover:bg-violet-600 text-violet-300 hover:text-white border border-violet-500/30 text-xs font-semibold transition-all cursor-pointer"
+              className="inline-flex items-center px-3.5 py-1.5 rounded-xl bg-stone-900 hover:bg-stone-800 text-stone-50 border border-stone-900 text-xs font-medium transition-colors cursor-pointer"
             >
               <span>⚔️ Head-to-Head Ranker</span>
             </button>
@@ -188,10 +188,10 @@ export default function ReviewForm({
             type="button"
             onClick={handleToggleQueue}
             disabled={isQueueLoading}
-            className={`inline-flex items-center px-3.5 py-1.5 rounded-xl border text-xs font-semibold transition-all cursor-pointer ${
+            className={`inline-flex items-center px-3.5 py-1.5 rounded-xl border text-xs font-medium transition-colors cursor-pointer ${
               bookmarked
-                ? 'bg-amber-500/20 text-amber-300 border-amber-500/40 hover:bg-amber-500/30'
-                : 'bg-slate-800 text-slate-300 border-slate-700 hover:bg-slate-750'
+                ? 'bg-[#EAE4D9] text-stone-900 border-[#D9D1C3] hover:bg-[#E2DBCE]'
+                : 'bg-[#FAF7F2] text-stone-700 border-[#EAE4D9] hover:bg-[#F3EDE2]'
             }`}
           >
             <span>{bookmarked ? '🔖 In Want to Listen' : '➕ Want to Listen'}</span>
@@ -200,30 +200,30 @@ export default function ReviewForm({
       </div>
 
       {error && (
-        <div className="bg-rose-500/10 border border-rose-500/30 text-rose-300 px-4 py-3 rounded-xl text-sm mb-4">
+        <div className="bg-rose-50 border border-rose-200 text-rose-700 px-4 py-3 rounded-xl text-sm mb-4">
           {error}
         </div>
       )}
 
       {successMsg && (
-        <div className="bg-emerald-500/10 border border-emerald-500/30 text-emerald-300 px-4 py-3 rounded-xl text-sm mb-4">
+        <div className="bg-stone-100 border border-stone-300 text-stone-800 px-4 py-3 rounded-xl text-sm mb-4">
           {successMsg}
         </div>
       )}
 
       <form onSubmit={handleSubmit} className="space-y-6">
         {/* Beli Score Slider & Tier Badge */}
-        <div className="bg-slate-950/70 border border-slate-800 rounded-xl p-5">
+        <div className="bg-[#FAF7F2] border border-[#EAE4D9] rounded-xl p-5">
           <div className="flex items-center justify-between mb-3">
             <div>
-              <span className="text-xs font-semibold uppercase tracking-wider text-slate-400">
+              <span className="text-xs font-semibold uppercase tracking-wider text-stone-500">
                 Beli Score
               </span>
               <div className="flex items-center space-x-2 mt-1">
-                <span className="text-4xl font-black text-white">{score.toFixed(1)}</span>
-                <span className="text-slate-500 text-sm font-semibold">/ 10</span>
+                <span className="text-4xl font-black text-stone-900">{score.toFixed(1)}</span>
+                <span className="text-stone-400 text-sm font-semibold">/ 10</span>
                 {targetRank && (
-                  <span className="ml-2 text-xs font-bold px-2 py-0.5 rounded-md bg-violet-500/20 text-violet-300 border border-violet-500/30">
+                  <span className="ml-2 text-xs font-medium px-2 py-0.5 rounded-md bg-[#EAE4D9] text-stone-800 border border-[#D9D1C3]">
                     Leaderboard Rank #{targetRank}
                   </span>
                 )}
@@ -234,8 +234,8 @@ export default function ReviewForm({
             <div
               className={`px-3 py-1.5 rounded-xl border flex items-center space-x-2 ${tier.badgeBg} ${tier.borderColor} ${tier.textColor}`}
             >
-              <span className="text-sm font-black">★ {tier.label}</span>
-              <span className="text-xs text-slate-400 hidden sm:inline">• {tier.sublabel}</span>
+              <span className="text-sm font-bold">★ {tier.label}</span>
+              <span className="text-xs text-stone-500 hidden sm:inline">• {tier.sublabel}</span>
             </div>
           </div>
 
@@ -249,10 +249,10 @@ export default function ReviewForm({
               setScore(parseFloat(e.target.value))
               setTargetRank(undefined) // clear automatic matchup rank if manually tweaked
             }}
-            className="w-full accent-violet-500 cursor-pointer h-2 bg-slate-800 rounded-lg"
+            className="w-full accent-stone-900 cursor-pointer h-2 bg-[#EAE4D9] rounded-lg"
           />
 
-          <div className="flex justify-between text-[11px] text-slate-500 mt-2 font-mono">
+          <div className="flex justify-between text-[11px] text-stone-400 mt-2 font-mono">
             <span>0.0 Skip</span>
             <span>6.0 Decent</span>
             <span>7.0 Good</span>
@@ -264,10 +264,10 @@ export default function ReviewForm({
         {/* Favorite Standout Tracks */}
         {album.tracklist && album.tracklist.length > 0 && (
           <div>
-            <label className="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-2">
+            <label className="block text-xs font-semibold uppercase tracking-wider text-stone-500 mb-2">
               Favorite Tracks (Select up to 4)
             </label>
-            <div className="flex flex-wrap gap-2 max-h-48 overflow-y-auto p-2 bg-slate-950/50 rounded-xl border border-slate-800">
+            <div className="flex flex-wrap gap-2 max-h-48 overflow-y-auto p-2 bg-[#FAF7F2] rounded-xl border border-[#EAE4D9]">
               {album.tracklist.map((track, idx) => {
                 const isSelected = favoriteTracks.includes(track)
                 return (
@@ -275,10 +275,10 @@ export default function ReviewForm({
                     key={idx}
                     type="button"
                     onClick={() => handleToggleFavoriteTrack(track)}
-                    className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all cursor-pointer ${
+                    className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all cursor-pointer border ${
                       isSelected
-                        ? 'bg-violet-600 text-white shadow-sm shadow-violet-600/30 font-semibold'
-                        : 'bg-slate-800 text-slate-300 hover:bg-slate-700'
+                        ? 'bg-stone-900 text-stone-50 border-stone-900 shadow-xs'
+                        : 'bg-white text-stone-700 border-[#EAE4D9] hover:border-stone-400'
                     }`}
                   >
                     {isSelected ? '★ ' : ''}
@@ -287,12 +287,30 @@ export default function ReviewForm({
                 )
               })}
             </div>
+
+            <div className="mt-3">
+              <label className="block text-xs font-semibold uppercase tracking-wider text-stone-500 mb-1">
+                Skip Track (Optional)
+              </label>
+              <select
+                value={skipTrack}
+                onChange={(e) => setSkipTrack(e.target.value)}
+                className="w-full px-3 py-2 bg-white border border-[#EAE4D9] rounded-xl text-stone-800 text-xs focus:outline-none focus:ring-2 focus:ring-stone-400"
+              >
+                <option value="">None (No skips)</option>
+                {album.tracklist.map((track, idx) => (
+                  <option key={idx} value={track}>
+                    {track}
+                  </option>
+                ))}
+              </select>
+            </div>
           </div>
         )}
 
         {/* Mood & Vibe Chips */}
         <div>
-          <label className="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-2">
+          <label className="block text-xs font-semibold uppercase tracking-wider text-stone-500 mb-2">
             Vibe & Mood Tags (Select up to 5)
           </label>
           <div className="flex flex-wrap gap-1.5">
@@ -305,8 +323,8 @@ export default function ReviewForm({
                   onClick={() => handleToggleVibe(vibe)}
                   className={`px-3 py-1 rounded-full text-xs font-medium transition-all cursor-pointer border ${
                     isSelected
-                      ? 'bg-fuchsia-600/20 text-fuchsia-300 border-fuchsia-500/50 font-bold'
-                      : 'bg-slate-950/60 text-slate-400 border-slate-800 hover:border-slate-700 hover:text-slate-200'
+                      ? 'bg-stone-900 text-stone-50 border-stone-900'
+                      : 'bg-[#FAF7F2] text-stone-600 border-[#EAE4D9] hover:border-stone-400 hover:text-stone-900'
                   }`}
                 >
                   {isSelected ? '✓ ' : ''}
@@ -320,7 +338,7 @@ export default function ReviewForm({
         {/* Would Listen Again & Listened With */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
-            <label className="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-2">
+            <label className="block text-xs font-semibold uppercase tracking-wider text-stone-500 mb-2">
               Would Listen Again?
             </label>
             <div className="grid grid-cols-3 gap-1.5">
@@ -331,8 +349,8 @@ export default function ReviewForm({
                   onClick={() => setListenAgain(opt.value)}
                   className={`py-2 px-1 text-center rounded-xl text-xs font-medium border transition-all cursor-pointer ${
                     listenAgain === opt.value
-                      ? 'bg-violet-600 text-white border-violet-500 font-bold'
-                      : 'bg-slate-950/60 text-slate-400 border-slate-800 hover:bg-slate-800'
+                      ? 'bg-stone-900 text-stone-50 border-stone-900 font-semibold'
+                      : 'bg-[#FAF7F2] text-stone-700 border-[#EAE4D9] hover:bg-[#F3EDE2]'
                   }`}
                 >
                   {opt.label}
@@ -342,13 +360,13 @@ export default function ReviewForm({
           </div>
 
           <div>
-            <label className="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-2">
+            <label className="block text-xs font-semibold uppercase tracking-wider text-stone-500 mb-2">
               Listening Setting
             </label>
             <select
               value={listenedWith}
               onChange={(e) => setListenedWith(e.target.value)}
-              className="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-white text-xs focus:outline-none focus:ring-2 focus:ring-violet-500"
+              className="w-full px-3 py-2 bg-white border border-[#EAE4D9] rounded-xl text-stone-800 text-xs focus:outline-none focus:ring-2 focus:ring-stone-400"
             >
               {LISTENED_WITH_OPTIONS.map((opt) => (
                 <option key={opt} value={opt}>
@@ -361,7 +379,7 @@ export default function ReviewForm({
 
         {/* Review Notes / Hot Takes */}
         <div>
-          <label htmlFor="reviewText" className="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-2">
+          <label htmlFor="reviewText" className="block text-xs font-semibold uppercase tracking-wider text-stone-500 mb-2">
             Review / Hot Take (Optional)
           </label>
           <textarea
@@ -369,7 +387,7 @@ export default function ReviewForm({
             rows={3}
             value={reviewText}
             onChange={(e) => setReviewText(e.target.value)}
-            className="w-full px-4 py-3 bg-slate-950 border border-slate-800 rounded-xl text-white text-sm focus:outline-none focus:ring-2 focus:ring-violet-500 placeholder-slate-500"
+            className="w-full px-4 py-3 bg-[#FAF7F2] border border-[#EAE4D9] rounded-xl text-stone-900 text-sm focus:outline-none focus:ring-2 focus:ring-stone-400 placeholder-stone-400"
             placeholder="What made this album special? Favorite moment or lyric?"
           />
         </div>
@@ -377,7 +395,7 @@ export default function ReviewForm({
         <button
           type="submit"
           disabled={isSubmitting}
-          className="w-full py-3 px-6 rounded-xl bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-500 hover:to-indigo-500 text-white font-bold text-sm shadow-lg shadow-violet-600/30 transition-all hover:scale-[1.005] active:scale-[0.99] disabled:opacity-50 cursor-pointer"
+          className="w-full py-3 px-6 rounded-xl bg-stone-900 hover:bg-stone-800 text-stone-50 font-medium text-sm shadow-xs transition-colors disabled:opacity-50 cursor-pointer"
         >
           {isSubmitting ? 'Saving to Leaderboard...' : 'Save & Rank Album 🏆'}
         </button>

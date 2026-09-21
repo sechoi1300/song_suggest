@@ -29,10 +29,10 @@ interface ReviewListProps {
 export default function ReviewList({ reviews, albumId }: ReviewListProps) {
   if (reviews.length === 0) {
     return (
-      <div className="text-center py-12 bg-slate-900/50 border border-slate-800 rounded-2xl">
+      <div className="text-center py-12 bg-[#F5F1E9]/60 border border-[#E3DCCE] rounded-2xl">
         <span className="text-3xl mb-2 block">🎵</span>
-        <p className="text-slate-400 font-medium">No reviews logged yet.</p>
-        <p className="text-slate-500 text-xs mt-1">Be the first to rank this album in your Beli list!</p>
+        <p className="text-stone-700 font-medium">No reviews logged yet.</p>
+        <p className="text-stone-500 text-xs mt-1">Be the first to rank this album in your Beli list!</p>
       </div>
     )
   }

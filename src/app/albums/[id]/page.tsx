@@ -28,7 +28,7 @@ export default async function AlbumPage({ params }: { params: Promise<{ id: stri
     : null
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100">
+    <div className="min-h-screen bg-[#FAF7F2] text-stone-900">
       <Navbar />
       <main className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <AlbumDetail

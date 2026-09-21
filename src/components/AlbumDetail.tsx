@@ -64,17 +64,14 @@ export default function AlbumDetail({
   return (
     <div className="space-y-8">
       {/* Hero Album Card */}
-      <div className="relative bg-slate-900 border border-slate-800 rounded-3xl overflow-hidden p-6 sm:p-8 shadow-2xl backdrop-blur-xl">
-        {/* Ambient glow from album colors */}
-        <div className="absolute top-0 right-0 -mt-12 -mr-12 w-96 h-96 bg-violet-600/15 rounded-full blur-3xl pointer-events-none" />
-
+      <div className="relative bg-white border border-[#EAE4D9] rounded-3xl overflow-hidden p-6 sm:p-8 shadow-xs">
         <div className="relative z-10 flex flex-col md:flex-row gap-8 items-start">
           {/* Album artwork with vinyl edge */}
           <div className="relative group mx-auto md:mx-0 flex-shrink-0">
             {/* Vinyl record poking out effect */}
-            <div className="absolute top-2 left-6 w-56 sm:w-64 h-56 sm:h-64 rounded-full bg-slate-950 border-4 border-slate-800 shadow-2xl flex items-center justify-center transition-transform duration-500 group-hover:translate-x-8">
-              <div className="w-20 h-20 rounded-full border border-slate-800 flex items-center justify-center">
-                <div className="w-6 h-6 rounded-full bg-violet-500" />
+            <div className="absolute top-2 left-6 w-56 sm:w-64 h-56 sm:h-64 rounded-full bg-stone-900 border-4 border-stone-800 shadow-xl flex items-center justify-center transition-transform duration-500 group-hover:translate-x-8">
+              <div className="w-20 h-20 rounded-full border border-stone-700 flex items-center justify-center bg-[#EAE4D9]">
+                <div className="w-5 h-5 rounded-full bg-stone-900" />
               </div>
             </div>
 
@@ -83,11 +80,11 @@ export default function AlbumDetail({
               <img
                 src={album.coverImageUrl}
                 alt={album.title}
-                className="relative z-10 w-56 sm:w-64 h-56 sm:h-64 rounded-2xl object-cover shadow-2xl border border-slate-700/60"
+                className="relative z-10 w-56 sm:w-64 h-56 sm:h-64 rounded-2xl object-cover shadow-md border border-[#EAE4D9]"
               />
             ) : (
-              <div className="relative z-10 w-56 sm:w-64 h-56 sm:h-64 rounded-2xl bg-gradient-to-br from-violet-600 via-indigo-600 to-fuchsia-600 flex items-center justify-center shadow-2xl border border-slate-700">
-                <span className="text-white text-7xl font-black">{album.title.charAt(0)}</span>
+              <div className="relative z-10 w-56 sm:w-64 h-56 sm:h-64 rounded-2xl bg-[#EAE4D9] flex items-center justify-center shadow-md border border-[#D9D1C3]">
+                <span className="text-stone-600 text-7xl font-bold">{album.title.charAt(0)}</span>
               </div>
             )}
           </div>
@@ -96,7 +93,7 @@ export default function AlbumDetail({
           <div className="flex-1 w-full">
             <div className="flex flex-wrap items-center gap-2 mb-2">
               {album.releaseYear && (
-                <span className="text-xs font-mono font-semibold px-2.5 py-0.5 rounded-full bg-slate-800 text-slate-300 border border-slate-700">
+                <span className="text-xs font-mono font-medium px-2.5 py-0.5 rounded-full bg-[#F3EDE2] text-stone-700 border border-[#E0D7C9]">
                   {album.releaseYear}
                 </span>
               )}
@@ -109,29 +106,29 @@ export default function AlbumDetail({
               )}
             </div>
 
-            <h1 className="text-3xl sm:text-4xl font-black text-white tracking-tight mb-2">
+            <h1 className="text-3xl sm:text-4xl font-black text-stone-900 tracking-tight mb-2">
               {album.title}
             </h1>
-            <p className="text-xl text-violet-300 font-semibold mb-4">
+            <p className="text-xl text-stone-600 font-semibold mb-4">
               {Array.isArray(album.artist) ? album.artist.join(', ') : album.artist}
             </p>
 
             {/* Stats row */}
-            <div className="flex flex-wrap items-center gap-5 text-xs text-slate-400 mb-5 pb-4 border-b border-slate-800">
+            <div className="flex flex-wrap items-center gap-5 text-xs text-stone-500 mb-5 pb-4 border-b border-[#EAE4D9]">
               <div>
-                <span className="text-slate-500">Released:</span>{' '}
-                <span className="text-slate-200 font-medium">{formatDate(album.releaseDate)}</span>
+                <span className="text-stone-400">Released:</span>{' '}
+                <span className="text-stone-800 font-medium">{formatDate(album.releaseDate)}</span>
               </div>
               {album.length && (
                 <div>
-                  <span className="text-slate-500">Length:</span>{' '}
-                  <span className="text-slate-200 font-medium">{album.length}</span>
+                  <span className="text-stone-400">Length:</span>{' '}
+                  <span className="text-stone-800 font-medium">{album.length}</span>
                 </div>
               )}
               {album.numSongs && (
                 <div>
-                  <span className="text-slate-500">Tracks:</span>{' '}
-                  <span className="text-slate-200 font-medium">{album.numSongs}</span>
+                  <span className="text-stone-400">Tracks:</span>{' '}
+                  <span className="text-stone-800 font-medium">{album.numSongs}</span>
                 </div>
               )}
             </div>
@@ -142,7 +139,7 @@ export default function AlbumDetail({
                 {album.genres.map((genre, idx) => (
                   <span
                     key={idx}
-                    className="px-3 py-1 bg-slate-800/80 hover:bg-slate-800 text-slate-300 text-xs font-medium rounded-lg border border-slate-700/60 transition-colors"
+                    className="px-3 py-1 bg-[#F4EFE6] hover:bg-[#EAE4D9] text-stone-700 text-xs font-medium rounded-lg border border-[#E5DEC7] transition-colors"
                   >
                     {genre}
                   </span>
@@ -151,28 +148,28 @@ export default function AlbumDetail({
             )}
 
             {/* Score summary */}
-            <div className="flex items-center space-x-3 bg-slate-950/60 border border-slate-800 rounded-2xl p-4 w-fit">
+            <div className="flex items-center space-x-3 bg-[#FAF7F2] border border-[#EAE4D9] rounded-2xl p-4 w-fit">
               {album.averageRating !== undefined ? (
                 <>
-                  <div className="text-center pr-4 border-r border-slate-800">
-                    <div className="text-xs font-bold uppercase tracking-wider text-slate-400">
+                  <div className="text-center pr-4 border-r border-[#EAE4D9]">
+                    <div className="text-xs font-semibold uppercase tracking-wider text-stone-500">
                       Community Score
                     </div>
                     <div className="flex items-baseline space-x-1 mt-0.5">
-                      <span className="text-3xl font-black text-white">
+                      <span className="text-3xl font-black text-stone-900">
                         {album.averageRating.toFixed(1)}
                       </span>
-                      <span className="text-xs text-slate-500 font-semibold">/ 10</span>
+                      <span className="text-xs text-stone-400 font-medium">/ 10</span>
                     </div>
                   </div>
-                  <div className="text-xs text-slate-400">
+                  <div className="text-xs text-stone-500">
                     Based on{' '}
-                    <span className="font-semibold text-slate-200">{album.reviewCount ?? 0}</span>{' '}
+                    <span className="font-semibold text-stone-800">{album.reviewCount ?? 0}</span>{' '}
                     {album.reviewCount === 1 ? 'rating' : 'ratings'} on Song Suggest
                   </div>
                 </>
               ) : (
-                <div className="text-sm text-slate-400">
+                <div className="text-sm text-stone-500">
                   No community ratings yet. Be the first to log this album!
                 </div>
               )}
@@ -183,18 +180,18 @@ export default function AlbumDetail({
 
       {/* Tracklist Preview */}
       {album.tracklist && album.tracklist.length > 0 && (
-        <div className="bg-slate-900 border border-slate-800 rounded-3xl p-6 shadow-xl">
-          <h3 className="text-lg font-bold text-white mb-4 flex items-center space-x-2">
+        <div className="bg-white border border-[#EAE4D9] rounded-3xl p-6 shadow-xs">
+          <h3 className="text-lg font-bold text-stone-900 mb-4 flex items-center space-x-2">
             <span>🎼 Tracklist ({album.tracklist.length} tracks)</span>
           </h3>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
             {album.tracklist.map((track, i) => (
               <div
                 key={i}
-                className="flex items-center space-x-3 px-3 py-2 rounded-xl bg-slate-950/50 border border-slate-800/60 text-xs"
+                className="flex items-center space-x-3 px-3 py-2 rounded-xl bg-[#FAF7F2] border border-[#EAE4D9] text-xs"
               >
-                <span className="w-5 font-mono text-slate-500 text-right">{i + 1}</span>
-                <span className="text-slate-200 font-medium truncate">{track}</span>
+                <span className="w-5 font-mono text-stone-400 text-right">{i + 1}</span>
+                <span className="text-stone-800 font-medium truncate">{track}</span>
               </div>
             ))}
           </div>
@@ -212,12 +209,12 @@ export default function AlbumDetail({
       </div>
 
       {/* Community Reviews List */}
-      <div className="bg-slate-900 border border-slate-800 rounded-3xl p-6 sm:p-8 shadow-xl">
+      <div className="bg-white border border-[#EAE4D9] rounded-3xl p-6 sm:p-8 shadow-xs">
         <div className="flex items-center justify-between mb-6">
-          <h2 className="text-2xl font-black text-white tracking-tight">
+          <h2 className="text-2xl font-black text-stone-900 tracking-tight">
             Community Rankings ({album.reviews.length})
           </h2>
-          <span className="text-xs text-slate-400">Sorted by newest</span>
+          <span className="text-xs text-stone-400">Sorted by newest</span>
         </div>
         <ReviewList reviews={album.reviews} albumId={album.id} />
       </div>

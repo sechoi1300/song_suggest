@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import PersonalLeaderboard, { RankedAlbumItem } from './PersonalLeaderboard'
-import WantToListenList from './WantToListenList'
+import WantToListenList, { WantToListenItem } from './WantToListenList'
 import { BELI_TIERS, getTierFromScore } from '@/lib/beli'
 
 interface UserProfileTabsProps {
@@ -12,7 +12,7 @@ interface UserProfileTabsProps {
     image?: string | null
   }
   rankedReviews: RankedAlbumItem[]
-  wantToListenItems: any[]
+  wantToListenItems: WantToListenItem[]
 }
 
 export default function UserProfileTabs({
@@ -44,59 +44,57 @@ export default function UserProfileTabs({
   return (
     <div className="space-y-8">
       {/* Profile Header & Taste Stats */}
-      <div className="relative bg-slate-900 border border-slate-800 rounded-3xl p-6 sm:p-8 shadow-2xl backdrop-blur-xl overflow-hidden">
-        <div className="absolute top-0 right-0 -mt-12 -mr-12 w-80 h-80 bg-violet-600/10 rounded-full blur-3xl pointer-events-none" />
-
+      <div className="relative bg-white border border-[#EAE4D9] rounded-3xl p-6 sm:p-8 shadow-xs overflow-hidden">
         <div className="flex flex-col sm:flex-row items-center sm:items-start gap-6 relative z-10">
           {/* Avatar */}
           {user.image ? (
             <img
               src={user.image}
               alt={user.name || 'User'}
-              className="h-24 w-24 rounded-2xl object-cover border-2 border-violet-500/40 shadow-xl shadow-violet-500/10"
+              className="h-24 w-24 rounded-2xl object-cover border border-[#EAE4D9] shadow-xs"
             />
           ) : (
-            <div className="h-24 w-24 rounded-2xl bg-gradient-to-tr from-violet-600 to-fuchsia-600 flex items-center justify-center text-white text-3xl font-black shadow-xl">
+            <div className="h-24 w-24 rounded-2xl bg-[#EAE4D9] text-stone-700 flex items-center justify-center text-3xl font-bold shadow-xs">
               {user.name?.charAt(0) || user.email.charAt(0).toUpperCase()}
             </div>
           )}
 
           {/* User Details & Badges */}
           <div className="flex-1 text-center sm:text-left">
-            <div className="inline-flex items-center space-x-1.5 px-3 py-1 rounded-full bg-violet-500/10 border border-violet-500/20 text-violet-400 text-xs font-semibold mb-2">
+            <div className="inline-flex items-center space-x-1.5 px-3 py-1 rounded-full bg-[#FAF7F2] border border-[#EAE4D9] text-stone-700 text-xs font-medium mb-2">
               <span>🎧 Beli Music Taste Profile</span>
             </div>
-            <h1 className="text-2xl sm:text-3xl font-black text-white">{user.name || user.email.split('@')[0]}</h1>
-            <p className="text-xs text-slate-400 mt-0.5">{user.email}</p>
+            <h1 className="text-2xl sm:text-3xl font-black text-stone-900">{user.name || user.email.split('@')[0]}</h1>
+            <p className="text-xs text-stone-500 mt-0.5">{user.email}</p>
 
             {/* Quick stats pills */}
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-5">
-              <div className="bg-slate-950/70 border border-slate-800/80 rounded-xl p-3 text-center sm:text-left">
-                <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500 block">
+              <div className="bg-[#FAF7F2] border border-[#EAE4D9] rounded-xl p-3 text-center sm:text-left">
+                <span className="text-[10px] font-semibold uppercase tracking-wider text-stone-500 block">
                   Ranked Albums
                 </span>
-                <span className="text-xl font-black text-white">{totalRanked}</span>
+                <span className="text-xl font-black text-stone-900">{totalRanked}</span>
               </div>
 
-              <div className="bg-slate-950/70 border border-slate-800/80 rounded-xl p-3 text-center sm:text-left">
-                <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500 block">
+              <div className="bg-[#FAF7F2] border border-[#EAE4D9] rounded-xl p-3 text-center sm:text-left">
+                <span className="text-[10px] font-semibold uppercase tracking-wider text-stone-500 block">
                   Average Score
                 </span>
-                <span className="text-xl font-black text-violet-300">★ {avgScore}</span>
+                <span className="text-xl font-black text-stone-900">★ {avgScore}</span>
               </div>
 
-              <div className="bg-slate-950/70 border border-slate-800/80 rounded-xl p-3 text-center sm:text-left">
-                <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500 block">
+              <div className="bg-[#FAF7F2] border border-[#EAE4D9] rounded-xl p-3 text-center sm:text-left">
+                <span className="text-[10px] font-semibold uppercase tracking-wider text-stone-500 block">
                   Top Genre
                 </span>
-                <span className="text-base font-bold text-white truncate block">{topGenre}</span>
+                <span className="text-base font-bold text-stone-800 truncate block">{topGenre}</span>
               </div>
 
-              <div className="bg-slate-950/70 border border-slate-800/80 rounded-xl p-3 text-center sm:text-left">
-                <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500 block">
+              <div className="bg-[#FAF7F2] border border-[#EAE4D9] rounded-xl p-3 text-center sm:text-left">
+                <span className="text-[10px] font-semibold uppercase tracking-wider text-stone-500 block">
                   Want to Listen
                 </span>
-                <span className="text-xl font-black text-amber-400">{wantToListenItems.length}</span>
+                <span className="text-xl font-black text-stone-900">{wantToListenItems.length}</span>
               </div>
             </div>
           </div>
@@ -104,14 +102,14 @@ export default function UserProfileTabs({
       </div>
 
       {/* Tabs Navigation */}
-      <div className="flex border-b border-slate-800 space-x-2">
+      <div className="flex border-b border-[#EAE4D9] space-x-2">
         <button
           type="button"
           onClick={() => setActiveTab('LEADERBOARD')}
-          className={`pb-4 px-4 text-sm font-bold border-b-2 transition-all cursor-pointer ${
+          className={`pb-4 px-4 text-sm font-medium border-b-2 transition-all cursor-pointer ${
             activeTab === 'LEADERBOARD'
-              ? 'border-violet-500 text-violet-400'
-              : 'border-transparent text-slate-400 hover:text-white'
+              ? 'border-stone-900 text-stone-900 font-bold'
+              : 'border-transparent text-stone-500 hover:text-stone-900'
           }`}
         >
           🏆 My Ranked Leaderboard ({totalRanked})
@@ -120,10 +118,10 @@ export default function UserProfileTabs({
         <button
           type="button"
           onClick={() => setActiveTab('QUEUE')}
-          className={`pb-4 px-4 text-sm font-bold border-b-2 transition-all cursor-pointer ${
+          className={`pb-4 px-4 text-sm font-medium border-b-2 transition-all cursor-pointer ${
             activeTab === 'QUEUE'
-              ? 'border-violet-500 text-violet-400'
-              : 'border-transparent text-slate-400 hover:text-white'
+              ? 'border-stone-900 text-stone-900 font-bold'
+              : 'border-transparent text-stone-500 hover:text-stone-900'
           }`}
         >
           🔖 Want to Listen ({wantToListenItems.length})
@@ -132,10 +130,10 @@ export default function UserProfileTabs({
         <button
           type="button"
           onClick={() => setActiveTab('STATS')}
-          className={`pb-4 px-4 text-sm font-bold border-b-2 transition-all cursor-pointer ${
+          className={`pb-4 px-4 text-sm font-medium border-b-2 transition-all cursor-pointer ${
             activeTab === 'STATS'
-              ? 'border-violet-500 text-violet-400'
-              : 'border-transparent text-slate-400 hover:text-white'
+              ? 'border-stone-900 text-stone-900 font-bold'
+              : 'border-transparent text-stone-500 hover:text-stone-900'
           }`}
         >
           📊 Taste Breakdown
@@ -152,11 +150,11 @@ export default function UserProfileTabs({
       )}
 
       {activeTab === 'STATS' && (
-        <div className="bg-slate-900 border border-slate-800 rounded-3xl p-6 sm:p-8 space-y-6">
-          <h3 className="text-lg font-bold text-white">Your Rating Tier Breakdown</h3>
+        <div className="bg-white border border-[#EAE4D9] rounded-3xl p-6 sm:p-8 space-y-6 shadow-xs">
+          <h3 className="text-lg font-bold text-stone-900">Your Rating Tier Breakdown</h3>
 
           {totalRanked === 0 ? (
-            <p className="text-slate-500 text-sm">No albums rated yet to generate statistics.</p>
+            <p className="text-stone-500 text-sm">No albums rated yet to generate statistics.</p>
           ) : (
             <div className="space-y-3">
               {Object.values(BELI_TIERS).map((tier) => {
@@ -171,11 +169,11 @@ export default function UserProfileTabs({
                       <span className={`font-bold ${tier.textColor}`}>
                         ★ {tier.label} ({tier.sublabel})
                       </span>
-                      <span className="text-slate-400 font-mono">
+                      <span className="text-stone-500 font-mono">
                         {count} ({percent}%)
                       </span>
                     </div>
-                    <div className="w-full h-3 bg-slate-950 rounded-full overflow-hidden border border-slate-800">
+                    <div className="w-full h-3 bg-[#F3EDE2] rounded-full overflow-hidden border border-[#E5DEC7]">
                       <div
                         className={`h-full bg-gradient-to-r ${tier.color}`}
                         style={{ width: `${percent}%` }}
@@ -188,18 +186,18 @@ export default function UserProfileTabs({
           )}
 
           {/* Top Genres Breakdown */}
-          <div className="pt-6 border-t border-slate-800">
-            <h4 className="text-sm font-bold text-white mb-3">Favorite Genres</h4>
+          <div className="pt-6 border-t border-[#EAE4D9]">
+            <h4 className="text-sm font-bold text-stone-900 mb-3">Favorite Genres</h4>
             <div className="flex flex-wrap gap-2">
               {Object.entries(genreCounts)
                 .sort((a, b) => b[1] - a[1])
                 .map(([genre, count]) => (
                   <div
                     key={genre}
-                    className="px-3 py-1.5 rounded-xl bg-slate-950 border border-slate-800 flex items-center space-x-2 text-xs"
+                    className="px-3 py-1.5 rounded-xl bg-[#FAF7F2] border border-[#EAE4D9] flex items-center space-x-2 text-xs"
                   >
-                    <span className="text-slate-200 font-medium">{genre}</span>
-                    <span className="text-violet-400 font-bold">{count}</span>
+                    <span className="text-stone-700 font-medium">{genre}</span>
+                    <span className="text-stone-900 font-bold">{count}</span>
                   </div>
                 ))}
             </div>

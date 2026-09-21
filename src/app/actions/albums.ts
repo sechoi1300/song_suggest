@@ -3,11 +3,208 @@
 import { prisma } from '@/lib/prisma'
 import { revalidatePath } from 'next/cache'
 import { SAMPLE_ALBUMS } from '@/lib/sampleAlbums'
+import {
+  searchAlbumsFromMusicApi,
+  getAlbumDetailsFromMusicApi,
+} from '@/lib/musicApi'
 
 export interface AlbumFilterOptions {
   search?: string
   genre?: string
   sort?: 'rating' | 'newest' | 'reviews' | 'title'
+}
+
+export interface AutocompleteAlbumItem {
+  id: string
+  collectionId?: number
+  title: string
+  artist: string[]
+  releaseYear?: number | null
+  genres: string[]
+  coverImageUrl?: string | null
+  numSongs?: number | null
+  inCatalog: boolean
+}
+
+/**
+ * Live autocomplete search combining catalog albums and the free Music Metadata API
+ */
+export async function searchAlbumAutocomplete(
+  query: string
+): Promise<AutocompleteAlbumItem[]> {
+  const trimmed = query.trim()
+  if (!trimmed || trimmed.length < 2) return []
+
+  try {
+    const [localMatches, apiMatches] = await Promise.all([
+      // 1. Search local database or sample catalog
+      (async (): Promise<AutocompleteAlbumItem[]> => {
+        try {
+          const albums = await prisma.album.findMany({
+            where: {
+              OR: [
+                { title: { contains: trimmed, mode: 'insensitive' } },
+                { artist: { hasSome: [trimmed] } },
+              ],
+            },
+            take: 4,
+          })
+
+          return albums.map((a) => ({
+            id: a.id,
+            title: a.title,
+            artist: a.artist,
+            releaseYear: a.releaseYear || new Date(a.releaseDate).getFullYear(),
+            genres: a.genres,
+            coverImageUrl: a.coverImageUrl,
+            numSongs: a.numSongs,
+            inCatalog: true,
+          }))
+        } catch {
+          // If DB is offline, match against sample catalog
+          return SAMPLE_ALBUMS.filter(
+            (a) =>
+              a.title.toLowerCase().includes(trimmed.toLowerCase()) ||
+              a.artist.some((art) => art.toLowerCase().includes(trimmed.toLowerCase()))
+          )
+            .slice(0, 3)
+            .map((a) => ({
+              id: a.id,
+              title: a.title,
+              artist: a.artist,
+              releaseYear: a.releaseYear,
+              genres: a.genres,
+              coverImageUrl: a.coverImageUrl,
+              numSongs: a.numSongs,
+              inCatalog: true,
+            }))
+        }
+      })(),
+      // 2. Search free Music Metadata API
+      searchAlbumsFromMusicApi(trimmed, 6),
+    ])
+
+    const seen = new Set<string>()
+    const results: AutocompleteAlbumItem[] = []
+
+    // Add local catalog results first
+    for (const item of localMatches) {
+      const key = `${item.title.toLowerCase()}_${item.artist[0]?.toLowerCase()}`
+      seen.add(key)
+      results.push(item)
+    }
+
+    // Add API suggestions
+    for (const item of apiMatches) {
+      const key = `${item.title.toLowerCase()}_${item.artist[0]?.toLowerCase()}`
+      if (!seen.has(key)) {
+        seen.add(key)
+        results.push({
+          id: item.id,
+          collectionId: item.collectionId,
+          title: item.title,
+          artist: item.artist,
+          releaseYear: item.releaseYear,
+          genres: item.genres,
+          coverImageUrl: item.coverImageUrl,
+          numSongs: item.numSongs,
+          inCatalog: false,
+        })
+      }
+    }
+
+    return results
+  } catch (error) {
+    console.error('Error in searchAlbumAutocomplete:', error)
+    return []
+  }
+}
+
+/**
+ * Fetches full metadata (tracklist, length, high-res art) from the Music API.
+ */
+export async function fetchAlbumDetailsFromApi(collectionId: number) {
+  return getAlbumDetailsFromMusicApi(collectionId)
+}
+
+/**
+ * Imports an album from the Music Metadata API into the database (or returns an in-memory album if DB is offline)
+ */
+export async function importOrGetAlbumFromApi(collectionIdOrId: number | string) {
+  let collectionId: number
+  if (typeof collectionIdOrId === 'string') {
+    collectionId = parseInt(collectionIdOrId.replace('itunes-', ''), 10)
+  } else {
+    collectionId = collectionIdOrId
+  }
+
+  if (isNaN(collectionId)) {
+    return { success: false, error: 'Invalid album collection ID' }
+  }
+
+  const itunesId = `itunes-${collectionId}`
+
+  // 1. Check if already exists in DB
+  try {
+    const existing = await prisma.album.findUnique({
+      where: { id: itunesId },
+      include: {
+        reviews: {
+          select: { rating: true },
+        },
+      },
+    })
+    if (existing) {
+      return { success: true, album: existing }
+    }
+  } catch {}
+
+  // 2. Fetch full details from Music API
+  const details = await getAlbumDetailsFromMusicApi(collectionId)
+  if (!details) {
+    return { success: false, error: 'Album not found in music metadata API' }
+  }
+
+  const relDate = new Date(details.releaseDate)
+
+  // 3. Persist to DB if possible
+  try {
+    const created = await prisma.album.create({
+      data: {
+        id: itunesId,
+        title: details.title,
+        artist: details.artist,
+        releaseDate: relDate,
+        releaseYear: details.releaseYear,
+        length: details.length || null,
+        numSongs: details.numSongs,
+        genres: details.genres,
+        coverImageUrl: details.coverImageUrl,
+        tracklist: details.tracklist || [],
+      },
+    })
+    revalidatePath('/')
+    return { success: true, album: created }
+  } catch (dbError) {
+    console.warn('Could not persist album to DB, serving in-memory representation:', dbError)
+    const memoryAlbum = {
+      id: itunesId,
+      title: details.title,
+      artist: details.artist,
+      releaseDate: relDate,
+      releaseYear: details.releaseYear,
+      length: details.length || null,
+      numSongs: details.numSongs,
+      genres: details.genres,
+      coverImageUrl: details.coverImageUrl,
+      tracklist: details.tracklist || [],
+      createdAt: new Date(),
+      updatedAt: new Date(),
+      spotifyUrl: null,
+      reviews: [],
+    }
+    return { success: true, album: memoryAlbum }
+  }
 }
 
 export async function getAlbums(options?: AlbumFilterOptions) {
@@ -131,6 +328,23 @@ export async function getAlbumById(id: string) {
     }
   } catch (error) {
     console.warn('Prisma getAlbumById failed, searching fallback catalog:', error)
+  }
+
+  // If album is an iTunes collection ID, resolve it from the music API
+  if (id.startsWith('itunes-')) {
+    try {
+      const res = await importOrGetAlbumFromApi(id)
+      if (res.success && res.album) {
+        return {
+          ...res.album,
+          averageRating: undefined,
+          reviewCount: 0,
+          reviews: [],
+        }
+      }
+    } catch (e) {
+      console.warn('Could not load iTunes album:', e)
+    }
   }
 
   // Fallback to sample catalog

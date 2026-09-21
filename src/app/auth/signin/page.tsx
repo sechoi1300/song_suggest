@@ -32,61 +32,61 @@ export default function SignInPage() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100">
+    <div className="min-h-screen bg-[#FAF7F2] text-stone-900">
       <Navbar />
       <main className="max-w-md mx-auto px-4 sm:px-6 lg:px-8 py-16">
-        <div className="bg-slate-900 border border-slate-800 rounded-2xl shadow-2xl p-8 backdrop-blur-xl">
+        <div className="bg-white border border-[#EAE4D9] rounded-3xl shadow-xs p-8">
           <div className="text-center mb-8">
-            <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-gradient-to-tr from-violet-600 to-fuchsia-500 shadow-lg shadow-violet-500/30 mb-4">
-              <span className="text-2xl">🎵</span>
+            <div className="inline-flex items-center justify-center w-12 h-12 rounded-2xl bg-stone-900 text-stone-100 shadow-xs mb-3 text-xl">
+              🎵
             </div>
-            <h1 className="text-3xl font-extrabold tracking-tight text-white">
+            <h1 className="text-2xl font-black tracking-tight text-stone-900">
               Welcome to Song Suggest
             </h1>
-            <p className="text-sm text-slate-400 mt-2">
+            <p className="text-xs text-stone-500 mt-1.5">
               The Beli experience for rating, ranking, and discovering albums.
             </p>
           </div>
 
           {/* Quick Demo Sign In */}
-          <div className="space-y-3 mb-6">
-            <p className="text-xs font-semibold uppercase tracking-wider text-slate-400 text-center">
+          <div className="space-y-2.5 mb-6">
+            <p className="text-[10px] font-semibold uppercase tracking-wider text-stone-400 text-center">
               Quick Sign In (One-Click)
             </p>
             <button
               type="button"
               onClick={() => handleDemoSignIn('alex@songsuggest.app', 'Alex Morgan')}
               disabled={isLoading}
-              className="w-full flex items-center justify-between px-4 py-3 bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-500 hover:to-indigo-500 text-white font-medium rounded-xl shadow-md shadow-violet-600/20 transition-all hover:scale-[1.01] active:scale-[0.99] disabled:opacity-60 cursor-pointer"
+              className="w-full flex items-center justify-between px-4 py-3 bg-stone-900 hover:bg-stone-800 text-stone-50 rounded-xl shadow-xs transition-colors disabled:opacity-60 cursor-pointer"
             >
               <div className="flex items-center space-x-3">
-                <span className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center font-bold text-sm">
+                <span className="w-8 h-8 rounded-full bg-stone-800 text-stone-100 flex items-center justify-center font-bold text-xs">
                   AM
                 </span>
                 <div className="text-left">
                   <div className="text-sm font-semibold">Sign in as Alex Morgan</div>
-                  <div className="text-xs text-violet-200">Taste Profile: Hip-Hop & Indie</div>
+                  <div className="text-xs text-stone-400">Taste Profile: Hip-Hop & Indie</div>
                 </div>
               </div>
-              <span className="text-xs bg-white/20 px-2 py-1 rounded-md font-mono">1-Click</span>
+              <span className="text-[10px] bg-stone-800 text-stone-300 px-2 py-0.5 rounded font-mono">1-Click</span>
             </button>
 
             <button
               type="button"
               onClick={() => handleDemoSignIn('jordan@songsuggest.app', 'Jordan Lee')}
               disabled={isLoading}
-              className="w-full flex items-center justify-between px-4 py-3 bg-slate-800 hover:bg-slate-750 border border-slate-700 text-white font-medium rounded-xl hover:border-slate-600 transition-all hover:scale-[1.01] active:scale-[0.99] disabled:opacity-60 cursor-pointer"
+              className="w-full flex items-center justify-between px-4 py-3 bg-[#F5F1E9] hover:bg-[#EAE4D9] border border-[#EAE4D9] text-stone-900 rounded-xl transition-colors disabled:opacity-60 cursor-pointer"
             >
               <div className="flex items-center space-x-3">
-                <span className="w-8 h-8 rounded-full bg-fuchsia-600/30 text-fuchsia-400 flex items-center justify-center font-bold text-sm">
+                <span className="w-8 h-8 rounded-full bg-[#EAE4D9] text-stone-800 flex items-center justify-center font-bold text-xs">
                   JL
                 </span>
                 <div className="text-left">
                   <div className="text-sm font-semibold">Sign in as Jordan Lee</div>
-                  <div className="text-xs text-slate-400">Taste Profile: Electronic & R&B</div>
+                  <div className="text-xs text-stone-500">Taste Profile: Electronic & R&B</div>
                 </div>
               </div>
-              <span className="text-xs bg-slate-700 px-2 py-1 rounded-md font-mono text-slate-300">
+              <span className="text-[10px] bg-[#EAE4D9] text-stone-700 px-2 py-0.5 rounded font-mono">
                 1-Click
               </span>
             </button>
@@ -94,16 +94,16 @@ export default function SignInPage() {
 
           <div className="relative mb-6">
             <div className="absolute inset-0 flex items-center">
-              <div className="w-full border-t border-slate-800"></div>
+              <div className="w-full border-t border-stone-200"></div>
             </div>
-            <div className="relative flex justify-center text-xs uppercase">
-              <span className="px-2 bg-slate-900 text-slate-500">Or use your name</span>
+            <div className="relative flex justify-center text-[10px] uppercase">
+              <span className="px-2 bg-white text-stone-400">Or use your name</span>
             </div>
           </div>
 
           <form onSubmit={handleCustomCredentialsSignIn} className="space-y-3 mb-6">
             <div>
-              <label htmlFor="name" className="block text-xs font-medium text-slate-300 mb-1">
+              <label htmlFor="name" className="block text-xs font-medium text-stone-600 mb-1">
                 Your Name
               </label>
               <input
@@ -112,11 +112,11 @@ export default function SignInPage() {
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 placeholder="e.g. Sam Taylor"
-                className="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-lg text-white text-sm focus:outline-none focus:ring-2 focus:ring-violet-500 focus:border-transparent placeholder-slate-500"
+                className="w-full px-3 py-2 bg-[#FAF7F2] border border-[#EAE4D9] rounded-xl text-stone-900 text-sm focus:outline-none focus:ring-2 focus:ring-stone-400 placeholder-stone-400"
               />
             </div>
             <div>
-              <label htmlFor="email" className="block text-xs font-medium text-slate-300 mb-1">
+              <label htmlFor="email" className="block text-xs font-medium text-stone-600 mb-1">
                 Email
               </label>
               <input
@@ -126,13 +126,13 @@ export default function SignInPage() {
                 onChange={(e) => setEmail(e.target.value)}
                 required
                 placeholder="you@example.com"
-                className="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-lg text-white text-sm focus:outline-none focus:ring-2 focus:ring-violet-500 focus:border-transparent placeholder-slate-500"
+                className="w-full px-3 py-2 bg-[#FAF7F2] border border-[#EAE4D9] rounded-xl text-stone-900 text-sm focus:outline-none focus:ring-2 focus:ring-stone-400 placeholder-stone-400"
               />
             </div>
             <button
               type="submit"
               disabled={isLoading}
-              className="w-full bg-slate-800 hover:bg-slate-700 border border-slate-700 text-white font-medium py-2 px-4 rounded-lg text-sm transition-colors disabled:opacity-50 cursor-pointer"
+              className="w-full bg-stone-900 hover:bg-stone-800 text-stone-50 font-medium py-2.5 px-4 rounded-xl text-sm transition-colors disabled:opacity-50 cursor-pointer shadow-xs"
             >
               {isLoading ? 'Entering...' : 'Enter App'}
             </button>
@@ -140,10 +140,10 @@ export default function SignInPage() {
 
           <div className="relative mb-4">
             <div className="absolute inset-0 flex items-center">
-              <div className="w-full border-t border-slate-800"></div>
+              <div className="w-full border-t border-stone-200"></div>
             </div>
-            <div className="relative flex justify-center text-xs uppercase">
-              <span className="px-2 bg-slate-900 text-slate-500">OAuth Providers</span>
+            <div className="relative flex justify-center text-[10px] uppercase">
+              <span className="px-2 bg-white text-stone-400">OAuth Providers</span>
             </div>
           </div>
 
@@ -151,7 +151,7 @@ export default function SignInPage() {
             <button
               type="button"
               onClick={() => signIn('google', { callbackUrl: '/' })}
-              className="w-full flex items-center justify-center px-4 py-2 border border-slate-800 rounded-lg bg-slate-950/60 text-xs font-medium text-slate-300 hover:bg-slate-800 hover:text-white transition-colors cursor-pointer"
+              className="w-full flex items-center justify-center px-4 py-2 border border-[#EAE4D9] rounded-xl bg-[#FAF7F2] text-xs font-medium text-stone-700 hover:bg-white hover:text-stone-900 transition-colors cursor-pointer"
             >
               <svg className="w-4 h-4 mr-2" viewBox="0 0 24 24">
                 <path
@@ -176,7 +176,7 @@ export default function SignInPage() {
             <button
               type="button"
               onClick={() => signIn('github', { callbackUrl: '/' })}
-              className="w-full flex items-center justify-center px-4 py-2 border border-slate-800 rounded-lg bg-slate-950/60 text-xs font-medium text-slate-300 hover:bg-slate-800 hover:text-white transition-colors cursor-pointer"
+              className="w-full flex items-center justify-center px-4 py-2 border border-[#EAE4D9] rounded-xl bg-[#FAF7F2] text-xs font-medium text-stone-700 hover:bg-white hover:text-stone-900 transition-colors cursor-pointer"
             >
               <svg className="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 24 24">
                 <path

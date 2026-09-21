@@ -3,7 +3,7 @@
 import { prisma } from '@/lib/prisma'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
-import { SAMPLE_ALBUMS, SampleAlbum } from '@/lib/sampleAlbums'
+import { SAMPLE_ALBUMS } from '@/lib/sampleAlbums'
 
 export interface SuggestionCriteria {
   mood?: string
@@ -12,8 +12,23 @@ export interface SuggestionCriteria {
   onlyFromQueue?: boolean
 }
 
+export interface SuggestedAlbum {
+  id: string
+  title: string
+  artist: string[]
+  releaseDate: Date
+  releaseYear?: number | null
+  length?: string | null
+  numSongs?: number | null
+  genres: string[]
+  coverImageUrl?: string | null
+  tracklist?: string[]
+  averageRating?: number
+  reviews?: { rating: number }[]
+}
+
 export interface AlbumSuggestion {
-  album: SampleAlbum | any
+  album: SuggestedAlbum
   matchScore: number // 0-100%
   matchReason: string
 }
@@ -26,9 +41,9 @@ export async function getAlbumSuggestions(
     const userId = session?.user?.id
 
     // Fetch all albums
-    let allAlbums: any[] = []
+    let allAlbums: SuggestedAlbum[] = []
     try {
-      allAlbums = await prisma.album.findMany({
+      allAlbums = (await prisma.album.findMany({
         include: {
           reviews: {
             select: {
@@ -36,7 +51,7 @@ export async function getAlbumSuggestions(
             },
           },
         },
-      })
+      })) as SuggestedAlbum[]
     } catch {}
 
     if (allAlbums.length === 0) {
@@ -44,10 +59,10 @@ export async function getAlbumSuggestions(
     }
 
     // Fetch user's rated albums & queue
-    let userRatedAlbumIds = new Set<string>()
-    let topGenres = new Map<string, number>()
-    let topArtists = new Set<string>()
-    let queueAlbumIds = new Set<string>()
+    const userRatedAlbumIds = new Set<string>()
+    const topGenres = new Map<string, number>()
+    const topArtists = new Set<string>()
+    const queueAlbumIds = new Set<string>()
 
     if (userId) {
       try {
@@ -97,7 +112,7 @@ export async function getAlbumSuggestions(
     // Score candidates
     const scored: AlbumSuggestion[] = candidates.map((album) => {
       let score = 50 // base match score
-      let reasons: string[] = []
+      const reasons: string[] = []
 
       // In queue?
       if (queueAlbumIds.has(album.id)) {
@@ -139,7 +154,7 @@ export async function getAlbumSuggestions(
       const averageRating =
         album.averageRating ??
         (album.reviews && album.reviews.length > 0
-          ? album.reviews.reduce((s: number, r: any) => s + r.rating, 0) / album.reviews.length
+          ? album.reviews.reduce((s: number, r: { rating: number }) => s + r.rating, 0) / album.reviews.length
           : 9.0)
 
       return {

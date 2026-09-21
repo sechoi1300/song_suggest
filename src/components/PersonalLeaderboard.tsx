@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import { reorderUserRankedReviews, deleteReview } from '@/app/actions/reviews'
-import { getTierFromScore, BELI_TIERS, BeliTier } from '@/lib/beli'
+import { getTierFromScore, BELI_TIERS } from '@/lib/beli'
 
 export interface RankedAlbumItem {
   id: string // reviewId
@@ -87,15 +87,15 @@ export default function PersonalLeaderboard({ initialReviews }: PersonalLeaderbo
 
   if (reviews.length === 0) {
     return (
-      <div className="text-center py-16 bg-slate-900 border border-slate-800 rounded-3xl p-8">
+      <div className="text-center py-16 bg-white border border-[#EAE4D9] rounded-3xl p-8 shadow-xs">
         <span className="text-5xl mb-3 block">🏆</span>
-        <h3 className="text-xl font-bold text-white mb-2">No albums ranked yet</h3>
-        <p className="text-slate-400 text-sm max-w-md mx-auto mb-6">
+        <h3 className="text-xl font-bold text-stone-900 mb-2">No albums ranked yet</h3>
+        <p className="text-stone-600 text-sm max-w-md mx-auto mb-6">
           Your personal Beli leaderboard is empty. Explore albums, rate them with Head-to-Head matchups, and watch your leaderboard come alive!
         </p>
         <Link
           href="/"
-          className="inline-flex items-center px-6 py-2.5 rounded-xl bg-violet-600 hover:bg-violet-500 text-white font-semibold text-sm shadow-lg shadow-violet-600/30 transition-all cursor-pointer"
+          className="inline-flex items-center px-6 py-2.5 rounded-xl bg-stone-900 hover:bg-stone-800 text-stone-50 font-medium text-sm shadow-xs transition-colors cursor-pointer"
         >
           Discover & Rank Albums
         </Link>
@@ -106,10 +106,10 @@ export default function PersonalLeaderboard({ initialReviews }: PersonalLeaderbo
   return (
     <div className="space-y-6">
       {/* Filtering & Search Bar */}
-      <div className="bg-slate-900 border border-slate-800 rounded-2xl p-4 flex flex-col sm:flex-row gap-3 items-stretch sm:items-center justify-between">
+      <div className="bg-[#F5F1E9] border border-[#E3DCCE] rounded-2xl p-4 flex flex-col sm:flex-row gap-3 items-stretch sm:items-center justify-between">
         {/* Search */}
         <div className="relative flex-1">
-          <span className="absolute inset-y-0 left-3 flex items-center text-slate-500 text-xs">
+          <span className="absolute inset-y-0 left-3 flex items-center text-stone-400 text-xs">
             🔍
           </span>
           <input
@@ -117,7 +117,7 @@ export default function PersonalLeaderboard({ initialReviews }: PersonalLeaderbo
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Search your ranked albums..."
-            className="w-full pl-8 pr-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-xs text-white focus:outline-none focus:ring-2 focus:ring-violet-500"
+            className="w-full pl-8 pr-3 py-2 bg-white border border-[#D9D1C3] rounded-xl text-xs text-stone-900 focus:outline-none focus:ring-2 focus:ring-stone-400 placeholder-stone-400"
           />
         </div>
 
@@ -128,8 +128,8 @@ export default function PersonalLeaderboard({ initialReviews }: PersonalLeaderbo
             onClick={() => setSelectedTierFilter('ALL')}
             className={`px-3 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap transition-colors cursor-pointer border ${
               selectedTierFilter === 'ALL'
-                ? 'bg-violet-600 text-white border-violet-500'
-                : 'bg-slate-950 text-slate-400 border-slate-800 hover:text-white'
+                ? 'bg-stone-900 text-stone-50 border-stone-900'
+                : 'bg-white text-stone-600 border-[#DDD5C7] hover:text-stone-900'
             }`}
           >
             All ({reviews.length})
@@ -146,7 +146,7 @@ export default function PersonalLeaderboard({ initialReviews }: PersonalLeaderbo
                 className={`px-2.5 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap transition-colors cursor-pointer border ${
                   isSelected
                     ? `${t.badgeBg} ${t.textColor} ${t.borderColor}`
-                    : 'bg-slate-950 text-slate-400 border-slate-800 hover:text-slate-200'
+                    : 'bg-white text-stone-600 border-[#DDD5C7] hover:text-stone-900'
                 }`}
               >
                 ★ {t.label} ({count})
@@ -164,23 +164,23 @@ export default function PersonalLeaderboard({ initialReviews }: PersonalLeaderbo
 
           // Rank styling medal badges
           let rankBadge = (
-            <span className="font-mono text-slate-400 font-bold text-sm">#{actualRank}</span>
+            <span className="font-mono text-stone-500 font-bold text-sm">#{actualRank}</span>
           )
           if (actualRank === 1) {
             rankBadge = (
-              <span className="w-8 h-8 rounded-full bg-amber-400/20 text-amber-300 border border-amber-400/40 flex items-center justify-center font-black text-xs shadow-lg shadow-amber-400/10">
+              <span className="w-8 h-8 rounded-full bg-amber-100 text-amber-900 border border-amber-300 flex items-center justify-center font-black text-xs shadow-xs">
                 🥇 1
               </span>
             )
           } else if (actualRank === 2) {
             rankBadge = (
-              <span className="w-8 h-8 rounded-full bg-slate-300/20 text-slate-200 border border-slate-300/40 flex items-center justify-center font-black text-xs shadow-lg shadow-slate-300/10">
+              <span className="w-8 h-8 rounded-full bg-[#EAE4D9] text-stone-800 border border-[#D9D1C3] flex items-center justify-center font-black text-xs shadow-xs">
                 🥈 2
               </span>
             )
           } else if (actualRank === 3) {
             rankBadge = (
-              <span className="w-8 h-8 rounded-full bg-amber-600/20 text-amber-500 border border-amber-600/40 flex items-center justify-center font-black text-xs shadow-lg shadow-amber-600/10">
+              <span className="w-8 h-8 rounded-full bg-[#F3EDE2] text-[#615243] border border-[#E0D7C9] flex items-center justify-center font-black text-xs shadow-xs">
                 🥉 3
               </span>
             )
@@ -189,7 +189,7 @@ export default function PersonalLeaderboard({ initialReviews }: PersonalLeaderbo
           return (
             <div
               key={item.id}
-              className="group bg-slate-900 border border-slate-800 hover:border-slate-700 rounded-2xl p-4 transition-all flex items-center gap-4 shadow-md"
+              className="group bg-white border border-[#EAE4D9] hover:border-stone-400 rounded-2xl p-4 transition-all flex items-center gap-4 shadow-xs"
             >
               {/* Rank Badge */}
               <div className="flex-shrink-0 w-9 flex items-center justify-center">
@@ -202,10 +202,10 @@ export default function PersonalLeaderboard({ initialReviews }: PersonalLeaderbo
                   <img
                     src={item.album.coverImageUrl}
                     alt={item.album.title}
-                    className="w-16 h-16 rounded-xl object-cover shadow-md border border-slate-700/60 group-hover:scale-105 transition-transform"
+                    className="w-16 h-16 rounded-xl object-cover shadow-xs border border-[#EAE4D9] group-hover:scale-105 transition-transform"
                   />
                 ) : (
-                  <div className="w-16 h-16 rounded-xl bg-gradient-to-br from-violet-600 to-fuchsia-600 flex items-center justify-center text-white text-xl font-bold">
+                  <div className="w-16 h-16 rounded-xl bg-[#EAE4D9] text-stone-700 flex items-center justify-center text-xl font-bold">
                     {item.album.title.charAt(0)}
                   </div>
                 )}
@@ -216,18 +216,18 @@ export default function PersonalLeaderboard({ initialReviews }: PersonalLeaderbo
                 <div className="flex flex-wrap items-center gap-2">
                   <Link
                     href={`/albums/${item.album.id}`}
-                    className="text-base font-bold text-white hover:text-violet-300 transition-colors truncate"
+                    className="text-base font-bold text-stone-900 hover:text-stone-700 transition-colors truncate"
                   >
                     {item.album.title}
                   </Link>
                   {item.album.releaseYear && (
-                    <span className="text-[11px] font-mono text-slate-500">
+                    <span className="text-[11px] font-mono text-stone-400">
                       ({item.album.releaseYear})
                     </span>
                   )}
                 </div>
 
-                <p className="text-xs text-slate-400 truncate">
+                <p className="text-xs text-stone-500 truncate">
                   {Array.isArray(item.album.artist)
                     ? item.album.artist.join(', ')
                     : item.album.artist}
@@ -236,20 +236,20 @@ export default function PersonalLeaderboard({ initialReviews }: PersonalLeaderbo
                 {/* Standout tracks & vibes */}
                 <div className="flex flex-wrap items-center gap-1.5 mt-2">
                   {item.favoriteTracks && item.favoriteTracks.length > 0 && (
-                    <span className="text-[11px] font-medium px-2 py-0.5 rounded-md bg-violet-600/20 text-violet-300 border border-violet-500/30">
+                    <span className="text-[11px] font-medium px-2 py-0.5 rounded-md bg-[#F4EFE6] text-stone-800 border border-[#E5DEC7]">
                       ★ {item.favoriteTracks[0]}
                       {item.favoriteTracks.length > 1 && ` +${item.favoriteTracks.length - 1}`}
                     </span>
                   )}
 
                   {item.vibes && item.vibes.length > 0 && (
-                    <span className="text-[10px] font-medium px-2 py-0.5 rounded-full bg-slate-800 text-slate-400">
+                    <span className="text-[10px] font-medium px-2 py-0.5 rounded-full bg-[#FAF7F2] text-stone-600 border border-[#EAE4D9]">
                       #{item.vibes[0]}
                     </span>
                   )}
 
                   {item.listenedWith && (
-                    <span className="text-[10px] text-slate-500 hidden sm:inline">
+                    <span className="text-[10px] text-stone-400 hidden sm:inline">
                       {item.listenedWith}
                     </span>
                   )}
@@ -259,8 +259,8 @@ export default function PersonalLeaderboard({ initialReviews }: PersonalLeaderbo
               {/* Beli Score & Tier */}
               <div className="flex-shrink-0 text-right pr-2">
                 <div className="flex items-baseline justify-end space-x-1">
-                  <span className="text-2xl font-black text-white">{item.rating.toFixed(1)}</span>
-                  <span className="text-xs text-slate-500 font-semibold">/10</span>
+                  <span className="text-2xl font-black text-stone-900">{item.rating.toFixed(1)}</span>
+                  <span className="text-xs text-stone-400 font-semibold">/10</span>
                 </div>
                 <div
                   className={`text-[10px] font-bold px-2 py-0.5 rounded-md border mt-0.5 inline-block ${tier.badgeBg} ${tier.borderColor} ${tier.textColor}`}
@@ -270,13 +270,13 @@ export default function PersonalLeaderboard({ initialReviews }: PersonalLeaderbo
               </div>
 
               {/* Order Controls (Move up / down) */}
-              <div className="flex-shrink-0 flex flex-col items-center space-y-1 pl-2 border-l border-slate-800">
+              <div className="flex-shrink-0 flex flex-col items-center space-y-1 pl-2 border-l border-[#EAE4D9]">
                 <button
                   type="button"
                   onClick={() => handleMove(index, 'UP')}
                   disabled={index === 0 || isUpdating}
                   title="Move up in rank"
-                  className="w-7 h-7 rounded-lg bg-slate-950 hover:bg-slate-800 text-slate-400 hover:text-white flex items-center justify-center text-xs disabled:opacity-20 cursor-pointer transition-colors"
+                  className="w-7 h-7 rounded-lg bg-[#FAF7F2] hover:bg-[#EAE4D9] text-stone-600 hover:text-stone-900 border border-[#EAE4D9] flex items-center justify-center text-xs disabled:opacity-30 cursor-pointer transition-colors"
                 >
                   ▲
                 </button>
@@ -285,7 +285,7 @@ export default function PersonalLeaderboard({ initialReviews }: PersonalLeaderbo
                   onClick={() => handleMove(index, 'DOWN')}
                   disabled={index === reviews.length - 1 || isUpdating}
                   title="Move down in rank"
-                  className="w-7 h-7 rounded-lg bg-slate-950 hover:bg-slate-800 text-slate-400 hover:text-white flex items-center justify-center text-xs disabled:opacity-20 cursor-pointer transition-colors"
+                  className="w-7 h-7 rounded-lg bg-[#FAF7F2] hover:bg-[#EAE4D9] text-stone-600 hover:text-stone-900 border border-[#EAE4D9] flex items-center justify-center text-xs disabled:opacity-30 cursor-pointer transition-colors"
                 >
                   ▼
                 </button>
@@ -296,7 +296,7 @@ export default function PersonalLeaderboard({ initialReviews }: PersonalLeaderbo
                 type="button"
                 onClick={() => handleDelete(item.id, item.albumId)}
                 title="Remove from leaderboard"
-                className="opacity-0 group-hover:opacity-100 text-slate-500 hover:text-rose-400 text-sm px-1 transition-opacity cursor-pointer"
+                className="opacity-0 group-hover:opacity-100 text-stone-400 hover:text-rose-600 text-sm px-1 transition-opacity cursor-pointer"
               >
                 ✕
               </button>

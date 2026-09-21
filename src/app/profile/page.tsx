@@ -5,6 +5,8 @@ import Navbar from '@/components/Navbar'
 import UserProfileTabs from '@/components/UserProfileTabs'
 import { getUserRankedReviews } from '@/app/actions/reviews'
 import { getUserWantToListen } from '@/app/actions/wantToListen'
+import { RankedAlbumItem } from '@/components/PersonalLeaderboard'
+import { WantToListenItem } from '@/components/WantToListenList'
 
 export default async function ProfilePage() {
   const session = await getServerSession(authOptions)
@@ -19,7 +21,7 @@ export default async function ProfilePage() {
   ])
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100">
+    <div className="min-h-screen bg-[#FAF7F2] text-stone-900">
       <Navbar />
       <main className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <UserProfileTabs
@@ -28,8 +30,8 @@ export default async function ProfilePage() {
             email: session.user.email || 'user@songsuggest.app',
             image: session.user.image,
           }}
-          rankedReviews={rankedReviews as any}
-          wantToListenItems={wantToListenItems}
+          rankedReviews={rankedReviews as unknown as RankedAlbumItem[]}
+          wantToListenItems={wantToListenItems as unknown as WantToListenItem[]}
         />
       </main>
     </div>

@@ -4,7 +4,6 @@ import { prisma } from '@/lib/prisma'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { revalidatePath } from 'next/cache'
-import { SAMPLE_ALBUMS } from '@/lib/sampleAlbums'
 
 export async function toggleWantToListen(albumId: string, notes?: string) {
   try {

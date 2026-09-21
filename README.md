@@ -36,13 +36,20 @@ Built with **Next.js 16 (App Router)**, **PostgreSQL (via Prisma ORM & pg driver
 - Bookmark upcoming releases or friend recommendations.
 - When you rank an album, it automatically moves from your queue to your personal leaderboard!
 
-### ✨ 6. AI & Taste Profile Suggestion Engine (`/suggest`)
+### 🌐 6. Free Music Metadata API & Live Auto-Complete
+- Connected to Apple Music/iTunes free public metadata API (no API key required).
+- **Instant Auto-Complete as you type**: Start typing any album name (e.g. *In Rainbows*, *Currents*, *Folklore*, *Abbey Road*) in the search bar or in the Add Album form.
+- A sleek dropdown appears with live suggestions including high-resolution artwork, artist, release year, genre, and track count.
+- In **Add Album**, selecting an autocomplete suggestion automatically fills in the title, artist, release date, track count, genre, artwork, and full tracklist!
+- In **Discover / Search**, selecting any suggested album automatically loads it so you can immediately rate it, rank it head-to-head, or save it to your queue.
+
+### ✨ 7. AI & Taste Profile Suggestion Engine (`/suggest`)
 - Computes affinity matches based on your top-rated albums, favorite genres, and shared artists.
 - **Spin the Record (Surprise Me)**: Picks an album suited for your day.
 - **Mood / Setting Filter**: Instant suggestions tailored for late night, gym, focus, or chill sessions.
 - **Queue Roulette**: Filters suggestions strictly from your saved queue.
 
-### 🔐 7. Instant 1-Click Demo Testing
+### 🔐 8. Instant 1-Click Demo Testing
 - Click **"Sign in as Alex Morgan"** or **"Jordan Lee"** to start testing the ranking flow instantly without configuring OAuth credentials.
 - Also supports Google OAuth, GitHub OAuth, or custom credentials.
 

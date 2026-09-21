@@ -4,7 +4,6 @@ import { useState } from 'react'
 import Link from 'next/link'
 import { getAlbumSuggestions, AlbumSuggestion, SuggestionCriteria } from '@/app/actions/suggest'
 import { getTierFromScore, BELI_VIBES } from '@/lib/beli'
-import { toggleWantToListen } from '@/app/actions/wantToListen'
 
 interface SuggestionStudioProps {
   initialSuggestions: AlbumSuggestion[]
@@ -38,15 +37,15 @@ export default function SuggestionStudio({
   return (
     <div className="space-y-8">
       {/* Studio Header & Surprise Me Button */}
-      <div className="relative bg-gradient-to-r from-violet-900/40 via-indigo-900/30 to-fuchsia-900/30 border border-violet-500/30 rounded-3xl p-6 sm:p-8 shadow-2xl overflow-hidden backdrop-blur-xl">
+      <div className="relative bg-[#F5F1E9] border border-[#E3DCCE] rounded-3xl p-6 sm:p-8 shadow-xs">
         <div className="max-w-2xl relative z-10">
-          <div className="inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-violet-500/20 text-violet-300 text-xs font-semibold mb-3 border border-violet-500/30">
+          <div className="inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-[#EAE4D9] text-stone-800 text-xs font-medium mb-3 border border-[#D9D1C3]">
             <span>✨ AI & Taste-Profile Music Matchmaker</span>
           </div>
-          <h1 className="text-3xl sm:text-4xl font-black text-white tracking-tight">
+          <h1 className="text-3xl sm:text-4xl font-black text-stone-900 tracking-tight">
             Album Suggestion Engine
           </h1>
-          <p className="text-slate-300 text-sm mt-2 leading-relaxed">
+          <p className="text-stone-600 text-sm mt-2 leading-relaxed">
             Personalized album discovery modeled on your highest-rated albums, standout genres, and Beli leaderboard tastes.
           </p>
 
@@ -54,7 +53,7 @@ export default function SuggestionStudio({
             <button
               type="button"
               onClick={handleSurpriseSpin}
-              className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-violet-600 to-fuchsia-600 hover:from-violet-500 hover:to-fuchsia-500 text-white font-bold text-sm shadow-lg shadow-violet-600/30 transition-all hover:scale-105 active:scale-95 cursor-pointer flex items-center space-x-2"
+              className="px-5 py-2.5 rounded-xl bg-stone-900 hover:bg-stone-800 text-stone-50 font-medium text-sm shadow-xs transition-colors cursor-pointer flex items-center space-x-2"
             >
               <span>🎲 Spin the Record (Surprise Me)</span>
             </button>
@@ -67,10 +66,10 @@ export default function SuggestionStudio({
                   setOnlyQueue(nextOnly)
                   handleFetch({ onlyFromQueue: nextOnly, genre: selectedGenre, mood: selectedVibe })
                 }}
-                className={`px-4 py-2.5 rounded-xl border text-xs font-bold transition-all cursor-pointer ${
+                className={`px-4 py-2.5 rounded-xl border text-xs font-medium transition-colors cursor-pointer ${
                   onlyQueue
-                    ? 'bg-amber-500/20 text-amber-300 border-amber-500/40'
-                    : 'bg-slate-900 text-slate-300 border-slate-700 hover:bg-slate-800'
+                    ? 'bg-[#EAE4D9] text-stone-900 border-[#D9D1C3]'
+                    : 'bg-white text-stone-700 border-[#EAE4D9] hover:bg-[#FAF7F2]'
                 }`}
               >
                 <span>{onlyQueue ? '✓ Queue Only Active' : '🔖 Pick from my Queue'}</span>
@@ -82,11 +81,11 @@ export default function SuggestionStudio({
 
       {/* Surprise Spotlight Modal / Card */}
       {surprisePick && (
-        <div className="bg-slate-900 border-2 border-violet-500/80 rounded-3xl p-6 sm:p-8 shadow-2xl relative animate-in fade-in slide-in-from-top-4 duration-300">
+        <div className="bg-white border-2 border-stone-800 rounded-3xl p-6 sm:p-8 shadow-md relative animate-in fade-in slide-in-from-top-4 duration-300">
           <button
             type="button"
             onClick={() => setSurprisePick(null)}
-            className="absolute top-4 right-4 text-slate-400 hover:text-white text-sm cursor-pointer p-1"
+            className="absolute top-4 right-4 text-stone-400 hover:text-stone-900 text-sm cursor-pointer p-1"
           >
             ✕ Close
           </button>
@@ -95,31 +94,31 @@ export default function SuggestionStudio({
             <img
               src={surprisePick.album.coverImageUrl}
               alt={surprisePick.album.title}
-              className="w-32 h-32 rounded-2xl object-cover shadow-2xl border border-slate-700 flex-shrink-0"
+              className="w-32 h-32 rounded-2xl object-cover shadow-sm border border-[#EAE4D9] flex-shrink-0"
             />
             <div className="flex-1 text-center sm:text-left">
-              <span className="text-xs font-bold uppercase tracking-wider text-violet-400">
+              <span className="text-xs font-semibold uppercase tracking-wider text-stone-500">
                 Your Chosen Listen for Today
               </span>
-              <h3 className="text-2xl font-black text-white mt-1">{surprisePick.album.title}</h3>
-              <p className="text-sm text-violet-300 font-medium">
+              <h3 className="text-2xl font-black text-stone-900 mt-1">{surprisePick.album.title}</h3>
+              <p className="text-sm text-stone-600 font-medium">
                 {Array.isArray(surprisePick.album.artist)
                   ? surprisePick.album.artist.join(', ')
                   : surprisePick.album.artist}
               </p>
-              <p className="text-xs text-slate-400 mt-2">{surprisePick.matchReason}</p>
+              <p className="text-xs text-stone-500 mt-2">{surprisePick.matchReason}</p>
 
               <div className="flex flex-wrap gap-2 justify-center sm:justify-start mt-4">
                 <Link
                   href={`/albums/${surprisePick.album.id}`}
-                  className="px-4 py-2 rounded-xl bg-violet-600 hover:bg-violet-500 text-white font-bold text-xs shadow-md transition-all cursor-pointer"
+                  className="px-4 py-2 rounded-xl bg-stone-900 hover:bg-stone-800 text-stone-50 font-medium text-xs shadow-xs transition-colors cursor-pointer"
                 >
                   Listen, Rate & Rank Now 🎧
                 </Link>
                 <button
                   type="button"
                   onClick={handleSurpriseSpin}
-                  className="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-semibold transition-all cursor-pointer"
+                  className="px-4 py-2 rounded-xl bg-[#F5F1E9] hover:bg-[#EAE4D9] text-stone-800 text-xs font-medium border border-[#EAE4D9] transition-colors cursor-pointer"
                 >
                   Spin Again 🎲
                 </button>
@@ -130,8 +129,8 @@ export default function SuggestionStudio({
       )}
 
       {/* Mood / Vibe Filter Selector */}
-      <div className="bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow-xl">
-        <label className="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-3">
+      <div className="bg-white border border-[#EAE4D9] rounded-2xl p-5 shadow-xs">
+        <label className="block text-xs font-semibold uppercase tracking-wider text-stone-500 mb-3">
           Filter by Mood or Setting
         </label>
         <div className="flex flex-wrap gap-1.5">
@@ -141,10 +140,10 @@ export default function SuggestionStudio({
               setSelectedVibe('')
               handleFetch({ mood: undefined, genre: selectedGenre, onlyFromQueue: onlyQueue })
             }}
-            className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition-all cursor-pointer border ${
+            className={`px-3 py-1.5 rounded-xl text-xs font-medium transition-colors cursor-pointer border ${
               selectedVibe === ''
-                ? 'bg-violet-600 text-white border-violet-500 shadow-sm shadow-violet-600/30'
-                : 'bg-slate-950 text-slate-400 border-slate-800 hover:text-white'
+                ? 'bg-stone-900 text-stone-50 border-stone-900 shadow-xs'
+                : 'bg-[#FAF7F2] text-stone-600 border-[#EAE4D9] hover:text-stone-900'
             }`}
           >
             All Vibes
@@ -159,10 +158,10 @@ export default function SuggestionStudio({
                   setSelectedVibe(vibe)
                   handleFetch({ mood: vibe, genre: selectedGenre, onlyFromQueue: onlyQueue })
                 }}
-                className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition-all cursor-pointer border ${
+                className={`px-3 py-1.5 rounded-xl text-xs font-medium transition-colors cursor-pointer border ${
                   isSelected
-                    ? 'bg-fuchsia-600 text-white border-fuchsia-500 shadow-sm shadow-fuchsia-600/30'
-                    : 'bg-slate-950 text-slate-400 border-slate-800 hover:text-slate-200'
+                    ? 'bg-stone-900 text-stone-50 border-stone-900 shadow-xs'
+                    : 'bg-[#FAF7F2] text-stone-600 border-[#EAE4D9] hover:border-stone-400 hover:text-stone-900'
                 }`}
               >
                 #{vibe}
@@ -170,27 +169,52 @@ export default function SuggestionStudio({
             )
           })}
         </div>
+
+        <div className="mt-4 pt-3 border-t border-[#EAE4D9]">
+          <label className="block text-xs font-semibold uppercase tracking-wider text-stone-500 mb-2">
+            Filter by Genre
+          </label>
+          <div className="flex flex-wrap gap-1.5">
+            {['ALL', 'Hip Hop', 'R&B', 'Rock', 'Electronic', 'Pop'].map((g) => (
+              <button
+                key={g}
+                type="button"
+                onClick={() => {
+                  setSelectedGenre(g)
+                  handleFetch({ mood: selectedVibe || undefined, genre: g, onlyFromQueue: onlyQueue })
+                }}
+                className={`px-2.5 py-1 rounded-lg text-xs font-medium transition-colors cursor-pointer border ${
+                  selectedGenre === g
+                    ? 'bg-stone-900 text-stone-50 border-stone-900 shadow-xs'
+                    : 'bg-[#FAF7F2] text-stone-600 border-[#EAE4D9] hover:text-stone-900'
+                }`}
+              >
+                {g === 'ALL' ? 'All Genres' : g}
+              </button>
+            ))}
+          </div>
+        </div>
       </div>
 
       {/* Suggestions Grid */}
       <div>
         <div className="flex items-center justify-between mb-4">
-          <h2 className="text-xl font-black text-white">Recommended For You</h2>
-          <span className="text-xs text-slate-500 font-mono">
+          <h2 className="text-xl font-black text-stone-900">Recommended For You</h2>
+          <span className="text-xs text-stone-400 font-mono">
             {suggestions.length} recommendations generated
           </span>
         </div>
 
         {isLoading ? (
-          <div className="text-center py-16 bg-slate-900 border border-slate-800 rounded-3xl">
-            <div className="w-8 h-8 border-2 border-violet-500 border-t-transparent rounded-full animate-spin mx-auto mb-3" />
-            <p className="text-slate-400 text-sm">Matching against your taste profile...</p>
+          <div className="text-center py-16 bg-white border border-[#EAE4D9] rounded-3xl">
+            <div className="w-8 h-8 border-2 border-stone-800 border-t-transparent rounded-full animate-spin mx-auto mb-3" />
+            <p className="text-stone-500 text-sm">Matching against your taste profile...</p>
           </div>
         ) : suggestions.length === 0 ? (
-          <div className="text-center py-16 bg-slate-900 border border-slate-800 rounded-3xl p-8">
+          <div className="text-center py-16 bg-white border border-[#EAE4D9] rounded-3xl p-8">
             <span className="text-4xl mb-2 block">🎵</span>
-            <p className="text-slate-300 font-bold">No recommendations found for this filter</p>
-            <p className="text-slate-500 text-xs mt-1">Try selecting a different vibe or clearing filters.</p>
+            <p className="text-stone-800 font-bold">No recommendations found for this filter</p>
+            <p className="text-stone-500 text-xs mt-1">Try selecting a different vibe or clearing filters.</p>
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -202,12 +226,12 @@ export default function SuggestionStudio({
               return (
                 <div
                   key={item.album.id}
-                  className="group bg-slate-900 border border-slate-800 hover:border-violet-500/50 rounded-2xl p-5 transition-all shadow-lg hover:shadow-violet-500/10 flex flex-col justify-between"
+                  className="group bg-white border border-[#EAE4D9] hover:border-stone-400 rounded-2xl p-5 transition-all shadow-xs hover:shadow-md flex flex-col justify-between"
                 >
                   <div>
                     {/* Top match score row */}
                     <div className="flex items-center justify-between mb-3">
-                      <div className="flex items-center space-x-1.5 text-xs font-bold text-violet-300 bg-violet-600/20 px-2.5 py-0.5 rounded-full border border-violet-500/30">
+                      <div className="flex items-center space-x-1.5 text-xs font-semibold text-stone-800 bg-[#F4EFE6] px-2.5 py-0.5 rounded-full border border-[#E5DEC7]">
                         <span>⚡ {item.matchScore}% Match</span>
                       </div>
                       {tier && (
@@ -225,10 +249,10 @@ export default function SuggestionStudio({
                           <img
                             src={item.album.coverImageUrl}
                             alt={item.album.title}
-                            className="w-20 h-20 rounded-xl object-cover shadow-md border border-slate-700/60 group-hover:scale-105 transition-transform"
+                            className="w-20 h-20 rounded-xl object-cover shadow-xs border border-[#EAE4D9] group-hover:scale-105 transition-transform"
                           />
                         ) : (
-                          <div className="w-20 h-20 rounded-xl bg-gradient-to-br from-violet-600 to-fuchsia-600 flex items-center justify-center text-white text-2xl font-bold">
+                          <div className="w-20 h-20 rounded-xl bg-[#EAE4D9] text-stone-700 flex items-center justify-center text-2xl font-bold">
                             {item.album.title.charAt(0)}
                           </div>
                         )}
@@ -237,17 +261,17 @@ export default function SuggestionStudio({
                       <div className="min-w-0 flex-1">
                         <Link
                           href={`/albums/${item.album.id}`}
-                          className="text-base font-bold text-white hover:text-violet-300 transition-colors block truncate"
+                          className="text-base font-bold text-stone-900 hover:text-stone-700 transition-colors block truncate"
                         >
                           {item.album.title}
                         </Link>
-                        <p className="text-xs text-slate-400 font-medium truncate">
+                        <p className="text-xs text-stone-500 font-medium truncate">
                           {Array.isArray(item.album.artist)
                             ? item.album.artist.join(', ')
                             : item.album.artist}
                         </p>
 
-                        <p className="text-xs text-slate-400 mt-2 line-clamp-2 leading-relaxed">
+                        <p className="text-xs text-stone-600 mt-2 line-clamp-2 leading-relaxed">
                           💡 {item.matchReason}
                         </p>
                       </div>
@@ -255,12 +279,12 @@ export default function SuggestionStudio({
                   </div>
 
                   {/* Action buttons */}
-                  <div className="pt-4 mt-4 border-t border-slate-800/80 flex items-center justify-between gap-2">
+                  <div className="pt-4 mt-4 border-t border-[#F0EAE1] flex items-center justify-between gap-2">
                     <div className="flex flex-wrap gap-1">
                       {item.album.genres?.slice(0, 2).map((g: string) => (
                         <span
                           key={g}
-                          className="text-[10px] px-2 py-0.5 rounded-md bg-slate-950 text-slate-400 border border-slate-800"
+                          className="text-[10px] px-2 py-0.5 rounded-md bg-[#FAF7F2] text-stone-600 border border-[#EAE4D9]"
                         >
                           {g}
                         </span>
@@ -269,7 +293,7 @@ export default function SuggestionStudio({
 
                     <Link
                       href={`/albums/${item.album.id}`}
-                      className="px-3.5 py-1.5 rounded-xl bg-violet-600/20 hover:bg-violet-600 text-violet-300 hover:text-white border border-violet-500/30 text-xs font-bold transition-all cursor-pointer whitespace-nowrap"
+                      className="px-3.5 py-1.5 rounded-xl bg-stone-900 hover:bg-stone-800 text-stone-50 text-xs font-medium transition-colors shadow-xs cursor-pointer whitespace-nowrap"
                     >
                       Rate & Rank 🎧
                     </Link>
