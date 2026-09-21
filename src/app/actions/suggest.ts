@@ -167,7 +167,7 @@ export async function getAlbumSuggestions(
       // Community rating boost - evaluated after rating calculation so database-backed albums receive it properly
       if (effectiveRating >= 9.0) {
         score += 15
-        reasons.push(`Beli Community Masterpiece (${effectiveRating.toFixed(1)}/10)`)
+        reasons.push(`Community Masterpiece (${effectiveRating.toFixed(1)}/10)`)
       }
 
       if (reasons.length === 0) {

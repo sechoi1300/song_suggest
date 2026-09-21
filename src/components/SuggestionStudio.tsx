@@ -46,7 +46,7 @@ export default function SuggestionStudio({
             Album Suggestion Engine
           </h1>
           <p className="text-stone-600 text-sm mt-2 leading-relaxed">
-            Personalized album discovery modeled on your highest-rated albums, standout genres, and Beli leaderboard tastes.
+            Personalized album discovery modeled on your highest-rated albums, standout genres, and personal leaderboard tastes.
           </p>
 
           <div className="flex flex-wrap items-center gap-3 mt-6">

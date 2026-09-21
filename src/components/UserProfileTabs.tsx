@@ -62,7 +62,7 @@ export default function UserProfileTabs({
           {/* User Details & Badges */}
           <div className="flex-1 text-center sm:text-left">
             <div className="inline-flex items-center space-x-1.5 px-3 py-1 rounded-full bg-[#FAF7F2] border border-[#EAE4D9] text-stone-700 text-xs font-medium mb-2">
-              <span>🎧 Beli Music Taste Profile</span>
+              <span>🎧 Music Taste Profile</span>
             </div>
             <h1 className="text-2xl sm:text-3xl font-black text-stone-900">{user.name || user.email.split('@')[0]}</h1>
             <p className="text-xs text-stone-500 mt-0.5">{user.email}</p>

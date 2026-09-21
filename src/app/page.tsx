@@ -47,11 +47,11 @@ export default async function Home() {
           </div>
         </div>
 
-        {/* Beli Rating Tiers Guide */}
+        {/* Score Tiers Guide */}
         <div className="bg-[#F7F4EE] border border-[#EAE4D9] rounded-2xl p-5 shadow-xs">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-3">
             <span className="text-xs font-semibold uppercase tracking-wider text-stone-500">
-              The Beli Score Tiers
+              The Rating Score Tiers
             </span>
             <span className="text-xs text-stone-400">
               Rank placements automatically calculate dynamic decimal ratings
@@ -77,8 +77,8 @@ export default async function Home() {
                         : tier.tier === 'GOOD'
                         ? '7.0 - 7.9'
                         : tier.tier === 'MEDIOCRE'
-                        ? '6.0 - 6.9'
-                        : '< 6.0'}
+                        ? '5.0 - 6.9'
+                        : '< 5.0'}
                     </span>
                   </div>
                   <p className="text-[11px] text-stone-600 mt-1">{tier.sublabel}</p>

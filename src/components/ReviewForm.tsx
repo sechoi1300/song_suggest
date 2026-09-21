@@ -76,7 +76,7 @@ export default function ReviewForm({
         <span className="text-3xl mb-3 block">🎧</span>
         <h3 className="text-xl font-bold text-stone-900 mb-2">Want to rate & rank this album?</h3>
         <p className="text-stone-600 text-sm mb-6 max-w-sm mx-auto">
-          Sign in to place this album on your personal Beli leaderboard and unlock recommendations.
+          Sign in to place this album on your personal leaderboard and unlock recommendations.
         </p>
         <Link
           href="/auth/signin"
@@ -114,7 +114,7 @@ export default function ReviewForm({
     setTargetRank(result.rank)
     setScore(result.score)
     setMode('FORM')
-    setSuccessMsg(`Ranked #${result.rank} with Beli score ${result.score}!`)
+    setSuccessMsg(`Ranked #${result.rank} with score ${result.score}!`)
   }
 
   const handleToggleQueue = async () => {
@@ -145,7 +145,7 @@ export default function ReviewForm({
     })
 
     if (result.success) {
-      setSuccessMsg('Album saved to your personal Beli leaderboard! 🎉')
+      setSuccessMsg('Album saved to your personal leaderboard! 🎉')
       router.refresh()
     } else {
       setError(result.error || 'Failed to submit review')
@@ -212,12 +212,12 @@ export default function ReviewForm({
       )}
 
       <form onSubmit={handleSubmit} className="space-y-6">
-        {/* Beli Score Slider & Tier Badge */}
+        {/* Score Slider & Tier Badge */}
         <div className="bg-[#FAF7F2] border border-[#EAE4D9] rounded-xl p-5">
           <div className="flex items-center justify-between mb-3">
             <div>
               <span className="text-xs font-semibold uppercase tracking-wider text-stone-500">
-                Beli Score
+                Score
               </span>
               <div className="flex items-center space-x-2 mt-1">
                 <span className="text-4xl font-black text-stone-900">{score.toFixed(1)}</span>
@@ -252,12 +252,13 @@ export default function ReviewForm({
             className="w-full accent-stone-900 cursor-pointer h-2 bg-[#EAE4D9] rounded-lg"
           />
 
-          <div className="flex justify-between text-[11px] text-stone-400 mt-2 font-mono">
-            <span>0.0 Skip</span>
-            <span>6.0 Decent</span>
-            <span>7.0 Good</span>
-            <span>8.0 Great</span>
-            <span>9.0+ Exceptional</span>
+          <div className="relative text-[11px] text-stone-500 mt-2 font-mono h-5">
+            <span className="absolute left-0">0 Skip</span>
+            <span className="absolute left-[30%] -translate-x-1/2 hidden sm:inline">3 Poor</span>
+            <span className="absolute left-[50%] -translate-x-1/2 font-semibold text-stone-800">5 OK / Average</span>
+            <span className="absolute left-[70%] -translate-x-1/2">7 Good</span>
+            <span className="absolute left-[85%] -translate-x-1/2 hidden sm:inline">8.5 Great</span>
+            <span className="absolute right-0 text-right">10 Exceptional</span>
           </div>
         </div>
 

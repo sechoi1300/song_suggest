@@ -110,7 +110,7 @@ export default function PersonalLeaderboard({ initialReviews }: PersonalLeaderbo
         <span className="text-5xl mb-3 block">🏆</span>
         <h3 className="text-xl font-bold text-stone-900 mb-2">No albums ranked yet</h3>
         <p className="text-stone-600 text-sm max-w-md mx-auto mb-6">
-          Your personal Beli leaderboard is empty. Explore albums, rate them with Head-to-Head matchups, and watch your leaderboard come alive!
+          Your personal leaderboard is empty. Explore albums, rate them with Head-to-Head matchups, and watch your leaderboard come alive!
         </p>
         <Link
           href="/"

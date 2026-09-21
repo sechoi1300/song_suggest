@@ -44,18 +44,18 @@ export const BELI_TIERS: Record<BeliTier, TierInfo> = {
   },
   MEDIOCRE: {
     tier: 'MEDIOCRE',
-    label: 'Decent',
-    sublabel: 'Mixed / A Few Highlights',
+    label: 'OK / Average',
+    sublabel: 'Decent / Mixed Highlights',
     color: 'from-stone-400 to-stone-600',
     badgeBg: 'bg-stone-100',
     textColor: 'text-stone-600',
     borderColor: 'border-stone-200',
-    minScore: 6.0,
+    minScore: 5.0,
   },
   SKIP: {
     tier: 'SKIP',
-    label: 'Not For Me',
-    sublabel: 'Disappointing / Skipped',
+    label: 'Below Average',
+    sublabel: 'Disappointing / Skip',
     color: 'from-stone-300 to-stone-400',
     badgeBg: 'bg-stone-100/60',
     textColor: 'text-stone-500',
@@ -68,7 +68,7 @@ export function getTierFromScore(score: number): TierInfo {
   if (score >= 9.0) return BELI_TIERS.EXCEPTIONAL
   if (score >= 8.0) return BELI_TIERS.GREAT
   if (score >= 7.0) return BELI_TIERS.GOOD
-  if (score >= 6.0) return BELI_TIERS.MEDIOCRE
+  if (score >= 5.0) return BELI_TIERS.MEDIOCRE
   return BELI_TIERS.SKIP
 }
 
