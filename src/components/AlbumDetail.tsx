@@ -58,6 +58,8 @@ export default function AlbumDetail({
 }: AlbumDetailProps) {
   const [playingTrack, setPlayingTrack] = useState<string | null>(null)
   const [previewUrls, setPreviewUrls] = useState<Record<string, string>>({})
+  const [trackProgress, setTrackProgress] = useState<number>(0)
+  const [currentTime, setCurrentTime] = useState<number>(0)
   const audioRef = useRef<HTMLAudioElement | null>(null)
 
   const formatDate = (date: Date | string) => {
@@ -87,16 +89,34 @@ export default function AlbumDetail({
     }
   }, [album.id])
 
+  const handleTimeUpdate = () => {
+    if (audioRef.current) {
+      const cur = audioRef.current.currentTime || 0
+      const dur = audioRef.current.duration || 30
+      setCurrentTime(cur)
+      setTrackProgress(Math.min(100, (cur / dur) * 100))
+    }
+  }
+
+  const handleStopAudio = () => {
+    setPlayingTrack(null)
+    setTrackProgress(0)
+    setCurrentTime(0)
+  }
+
   const handleTogglePlay = (trackTitle: string, explicitPreviewUrl?: string) => {
     const url = explicitPreviewUrl || previewUrls[trackTitle.toLowerCase().trim()]
     if (!url) return
 
     if (playingTrack === trackTitle) {
       audioRef.current?.pause()
-      setPlayingTrack(null)
+      handleStopAudio()
     } else {
       if (audioRef.current) {
         audioRef.current.src = url
+        audioRef.current.currentTime = 0
+        setTrackProgress(0)
+        setCurrentTime(0)
         audioRef.current.play().catch((err) => console.warn('Audio play error:', err))
       }
       setPlayingTrack(trackTitle)
@@ -230,7 +250,10 @@ export default function AlbumDetail({
             {playingTrack && (
               <div className="flex items-center space-x-2 px-3 py-1 bg-stone-900 text-stone-100 text-xs rounded-full shadow-xs animate-in fade-in">
                 <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-                <span className="truncate max-w-[160px] sm:max-w-xs">Playing preview: {playingTrack}</span>
+                <span className="truncate max-w-[140px] sm:max-w-xs font-medium">Playing: {playingTrack}</span>
+                <span className="font-mono text-[10px] text-stone-400 tabular-nums">
+                  {Math.floor(currentTime)}s / 30s
+                </span>
                 <button
                   type="button"
                   onClick={() => handleTogglePlay(playingTrack)}
@@ -244,8 +267,9 @@ export default function AlbumDetail({
 
           <audio
             ref={audioRef}
-            onEnded={() => setPlayingTrack(null)}
-            onError={() => setPlayingTrack(null)}
+            onTimeUpdate={handleTimeUpdate}
+            onEnded={handleStopAudio}
+            onError={handleStopAudio}
             className="hidden"
           />
 
@@ -257,13 +281,31 @@ export default function AlbumDetail({
               return (
                 <div
                   key={i}
-                  className={`flex items-center justify-between space-x-3 px-3.5 py-2.5 rounded-xl border text-xs transition-colors ${
+                  className={`relative overflow-hidden flex items-center justify-between space-x-3 px-3.5 py-2.5 rounded-xl border text-xs transition-colors ${
                     isPlaying
                       ? 'bg-[#EAE4D9] border-stone-400 text-stone-900 font-semibold'
                       : 'bg-[#FAF7F2] border-[#EAE4D9] text-stone-800'
                   }`}
                 >
-                  <div className="flex items-center space-x-2.5 min-w-0">
+                  {/* Subtle darker background tint filling up with playback */}
+                  {isPlaying && (
+                    <div
+                      className="absolute inset-y-0 left-0 bg-stone-300/40 pointer-events-none transition-[width] duration-150 ease-linear"
+                      style={{ width: `${trackProgress}%` }}
+                    />
+                  )}
+
+                  {/* Progress bar line filling up along the bottom edge with a darker color */}
+                  {isPlaying && (
+                    <div className="absolute bottom-0 left-0 right-0 h-[3px] bg-stone-300/60 overflow-hidden pointer-events-none">
+                      <div
+                        className="h-full bg-stone-800 transition-[width] duration-150 ease-linear rounded-r-full"
+                        style={{ width: `${trackProgress}%` }}
+                      />
+                    </div>
+                  )}
+
+                  <div className="relative z-10 flex items-center space-x-2.5 min-w-0">
                     <span className="w-5 font-mono text-stone-400 text-right flex-shrink-0">
                       {i + 1}
                     </span>
@@ -271,19 +313,26 @@ export default function AlbumDetail({
                   </div>
 
                   {url && (
-                    <button
-                      type="button"
-                      onClick={() => handleTogglePlay(track, url)}
-                      title={isPlaying ? 'Pause preview' : 'Listen to 30s audio preview'}
-                      className={`flex-shrink-0 px-2 py-1 rounded-lg text-[10px] font-bold flex items-center space-x-1 transition-all cursor-pointer ${
-                        isPlaying
-                          ? 'bg-stone-900 text-stone-50 shadow-xs'
-                          : 'bg-white hover:bg-stone-200 text-stone-700 border border-[#D9D1C3]'
-                      }`}
-                    >
-                      <span>{isPlaying ? '⏸' : '▶'}</span>
-                      <span className="hidden sm:inline">{isPlaying ? 'Pause' : '30s'}</span>
-                    </button>
+                    <div className="relative z-10 flex items-center space-x-1.5 flex-shrink-0">
+                      {isPlaying && (
+                        <span className="font-mono text-[10px] text-stone-600 tabular-nums">
+                          {Math.floor(currentTime)}s
+                        </span>
+                      )}
+                      <button
+                        type="button"
+                        onClick={() => handleTogglePlay(track, url)}
+                        title={isPlaying ? 'Pause preview' : 'Listen to 30s audio preview'}
+                        className={`px-2 py-1 rounded-lg text-[10px] font-bold flex items-center space-x-1 transition-all cursor-pointer ${
+                          isPlaying
+                            ? 'bg-stone-900 text-stone-50 shadow-xs'
+                            : 'bg-white hover:bg-stone-200 text-stone-700 border border-[#D9D1C3]'
+                        }`}
+                      >
+                        <span>{isPlaying ? '⏸' : '▶'}</span>
+                        <span className="hidden sm:inline">{isPlaying ? 'Pause' : '30s'}</span>
+                      </button>
+                    </div>
                   )}
                 </div>
               )

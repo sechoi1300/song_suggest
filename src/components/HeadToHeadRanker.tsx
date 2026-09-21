@@ -38,6 +38,7 @@ export default function HeadToHeadRanker({
   // Audio preview state
   const [playingAlbumId, setPlayingAlbumId] = useState<string | null>(null)
   const [previewTrackTitle, setPreviewTrackTitle] = useState<string | null>(null)
+  const [playbackProgress, setPlaybackProgress] = useState<number>(0)
   const [albumPreviews, setAlbumPreviews] = useState<
     Record<string, { trackName: string; previewUrl: string } | null>
   >({})
@@ -51,10 +52,19 @@ export default function HeadToHeadRanker({
   // Total comparisons needed ~ ceil(log2(N))
   const estimatedRounds = Math.max(1, Math.ceil(Math.log2(existingAlbums.length + 1)))
 
+  const handleTimeUpdate = () => {
+    if (audioRef.current) {
+      const cur = audioRef.current.currentTime || 0
+      const dur = audioRef.current.duration || 30
+      setPlaybackProgress(Math.min(100, (cur / dur) * 100))
+    }
+  }
+
   const stopAudio = () => {
     audioRef.current?.pause()
     setPlayingAlbumId(null)
     setPreviewTrackTitle(null)
+    setPlaybackProgress(0)
   }
 
   const handleChoice = (winner: 'CURRENT' | 'OPPONENT') => {
@@ -177,14 +187,9 @@ export default function HeadToHeadRanker({
     <div className="bg-[#F5F1E9] border border-[#E3DCCE] rounded-2xl p-6 shadow-xs relative">
       <audio
         ref={audioRef}
-        onEnded={() => {
-          setPlayingAlbumId(null)
-          setPreviewTrackTitle(null)
-        }}
-        onError={() => {
-          setPlayingAlbumId(null)
-          setPreviewTrackTitle(null)
-        }}
+        onTimeUpdate={handleTimeUpdate}
+        onEnded={stopAudio}
+        onError={stopAudio}
         className="hidden"
       />
 
@@ -239,26 +244,45 @@ export default function HeadToHeadRanker({
               </div>
             </div>
 
-            {/* Inline 30s Audio Preview Button */}
+            {/* Inline 30s Audio Preview Button with Progress Bar */}
             <div className="mb-4">
               <span
                 onClick={(e) => handlePlayPreview(e, currentAlbum)}
-                className={`inline-flex items-center space-x-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
+                className={`relative overflow-hidden inline-flex items-center space-x-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
                   playingAlbumId === currentAlbum.id
-                    ? 'bg-stone-900 text-stone-50 shadow-xs'
+                    ? 'bg-[#EAE4D9] text-stone-900 border border-stone-400 shadow-xs'
                     : 'bg-[#FAF7F2] hover:bg-[#EAE4D9] text-stone-700 border border-[#D9D1C3]'
                 }`}
               >
-                {loadingPreviewId === currentAlbum.id ? (
-                  <span className="w-3 h-3 border-2 border-stone-600 border-t-transparent rounded-full animate-spin" />
-                ) : (
-                  <span>{playingAlbumId === currentAlbum.id ? '⏸ Pause' : '▶ 30s Audio Preview'}</span>
+                {/* Subtle darker progress background fill */}
+                {playingAlbumId === currentAlbum.id && (
+                  <div
+                    className="absolute inset-y-0 left-0 bg-stone-300/50 pointer-events-none transition-[width] duration-150 ease-linear"
+                    style={{ width: `${playbackProgress}%` }}
+                  />
                 )}
-                {playingAlbumId === currentAlbum.id && previewTrackTitle && (
-                  <span className="truncate max-w-[130px] text-stone-300 font-normal text-[11px]">
-                    • {previewTrackTitle}
-                  </span>
+                {/* Darker progress bar line along the bottom */}
+                {playingAlbumId === currentAlbum.id && (
+                  <div className="absolute bottom-0 left-0 right-0 h-[2.5px] bg-stone-300/70 overflow-hidden pointer-events-none">
+                    <div
+                      className="h-full bg-stone-900 transition-[width] duration-150 ease-linear"
+                      style={{ width: `${playbackProgress}%` }}
+                    />
+                  </div>
                 )}
+
+                <span className="relative z-10 flex items-center space-x-1.5">
+                  {loadingPreviewId === currentAlbum.id ? (
+                    <span className="w-3 h-3 border-2 border-stone-600 border-t-transparent rounded-full animate-spin" />
+                  ) : (
+                    <span>{playingAlbumId === currentAlbum.id ? '⏸ Pause' : '▶ 30s Audio Preview'}</span>
+                  )}
+                  {playingAlbumId === currentAlbum.id && previewTrackTitle && (
+                    <span className="truncate max-w-[130px] text-stone-700 font-normal text-[11px]">
+                      • {previewTrackTitle}
+                    </span>
+                  )}
+                </span>
               </span>
             </div>
           </div>
@@ -310,7 +334,7 @@ export default function HeadToHeadRanker({
               </div>
             </div>
 
-            {/* Inline 30s Audio Preview Button */}
+            {/* Inline 30s Audio Preview Button with Progress Bar */}
             <div className="mb-4">
               <span
                 onClick={(e) =>
@@ -320,22 +344,41 @@ export default function HeadToHeadRanker({
                     artist: opponent.artist,
                   })
                 }
-                className={`inline-flex items-center space-x-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
+                className={`relative overflow-hidden inline-flex items-center space-x-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
                   playingAlbumId === opponent.albumId
-                    ? 'bg-stone-900 text-stone-50 shadow-xs'
+                    ? 'bg-[#EAE4D9] text-stone-900 border border-stone-400 shadow-xs'
                     : 'bg-[#FAF7F2] hover:bg-[#EAE4D9] text-stone-700 border border-[#D9D1C3]'
                 }`}
               >
-                {loadingPreviewId === opponent.albumId ? (
-                  <span className="w-3 h-3 border-2 border-stone-600 border-t-transparent rounded-full animate-spin" />
-                ) : (
-                  <span>{playingAlbumId === opponent.albumId ? '⏸ Pause' : '▶ 30s Audio Preview'}</span>
+                {/* Subtle darker progress background fill */}
+                {playingAlbumId === opponent.albumId && (
+                  <div
+                    className="absolute inset-y-0 left-0 bg-stone-300/50 pointer-events-none transition-[width] duration-150 ease-linear"
+                    style={{ width: `${playbackProgress}%` }}
+                  />
                 )}
-                {playingAlbumId === opponent.albumId && previewTrackTitle && (
-                  <span className="truncate max-w-[130px] text-stone-300 font-normal text-[11px]">
-                    • {previewTrackTitle}
-                  </span>
+                {/* Darker progress bar line along the bottom */}
+                {playingAlbumId === opponent.albumId && (
+                  <div className="absolute bottom-0 left-0 right-0 h-[2.5px] bg-stone-300/70 overflow-hidden pointer-events-none">
+                    <div
+                      className="h-full bg-stone-900 transition-[width] duration-150 ease-linear"
+                      style={{ width: `${playbackProgress}%` }}
+                    />
+                  </div>
                 )}
+
+                <span className="relative z-10 flex items-center space-x-1.5">
+                  {loadingPreviewId === opponent.albumId ? (
+                    <span className="w-3 h-3 border-2 border-stone-600 border-t-transparent rounded-full animate-spin" />
+                  ) : (
+                    <span>{playingAlbumId === opponent.albumId ? '⏸ Pause' : '▶ 30s Audio Preview'}</span>
+                  )}
+                  {playingAlbumId === opponent.albumId && previewTrackTitle && (
+                    <span className="truncate max-w-[130px] text-stone-700 font-normal text-[11px]">
+                      • {previewTrackTitle}
+                    </span>
+                  )}
+                </span>
               </span>
             </div>
           </div>
