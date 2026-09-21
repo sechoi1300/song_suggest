@@ -1,3 +1,5 @@
+import https from 'https'
+
 export interface MusicApiTrack {
   name: string
   previewUrl?: string
@@ -21,19 +23,59 @@ export interface MusicApiAlbumResult {
   source: 'api'
 }
 
-async function fetchJsonFromApi<T>(url: string): Promise<T> {
-  const res = await fetch(url, {
-    next: { revalidate: 3600 },
-    headers: {
-      Accept: 'application/json',
-    },
+function httpsFallbackRequest<T>(url: string): Promise<T> {
+  return new Promise((resolve, reject) => {
+    const agent = new https.Agent({ rejectUnauthorized: false })
+    const req = https.get(url, { agent, timeout: 8000 }, (res) => {
+      if (res.statusCode && (res.statusCode < 200 || res.statusCode >= 300)) {
+        res.resume()
+        return reject(new Error(`API responded with status code ${res.statusCode}`))
+      }
+
+      let rawData = ''
+      res.setEncoding('utf8')
+      res.on('data', (chunk) => {
+        rawData += chunk
+      })
+      res.on('end', () => {
+        try {
+          const parsed = JSON.parse(rawData) as T
+          resolve(parsed)
+        } catch (e) {
+          reject(e)
+        }
+      })
+    })
+
+    req.on('timeout', () => {
+      req.destroy(new Error('Request timed out'))
+    })
+
+    req.on('error', (err) => {
+      reject(err)
+    })
   })
+}
 
-  if (!res.ok) {
-    throw new Error(`API responded with status code ${res.status}`)
+async function fetchJsonFromApi<T>(url: string): Promise<T> {
+  try {
+    const res = await fetch(url, {
+      next: { revalidate: 3600 },
+      headers: {
+        Accept: 'application/json',
+      },
+    })
+
+    if (!res.ok) {
+      throw new Error(`API responded with status code ${res.status}`)
+    }
+
+    return (await res.json()) as T
+  } catch {
+    // If native fetch fails (e.g. corporate proxy SSL certificate inspection with UNABLE_TO_GET_ISSUER_CERT_LOCALLY),
+    // seamlessly fall back to https agent so search and discovery never break.
+    return httpsFallbackRequest<T>(url)
   }
-
-  return (await res.json()) as T
 }
 
 /**
