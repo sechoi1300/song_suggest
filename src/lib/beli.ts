@@ -104,6 +104,8 @@ export const LISTENED_WITH_OPTIONS = [
 
 /**
  * Calculates a dynamic Beli-style decimal score based on rank placement among user's sorted albums.
+ * Prevents decimal collisions between closely spaced ratings (e.g. 9.1 and 9.0) by preserving
+ * precise fractional steps or shifting slightly so distinct ranks never share an identical score.
  */
 export function calculateScoreFromRankPlacement(
   insertRank: number, // 1-based rank position (1 = top)
@@ -116,23 +118,55 @@ export function calculateScoreFromRankPlacement(
   // Inserted at #1 (better than best album)
   if (insertRank === 1) {
     const topScore = existingScores[0]
-    return Math.min(10.0, Number((topScore + 0.3).toFixed(1)))
+    if (topScore >= 10.0) return 10.0
+    const next1 = Number((topScore + 0.2).toFixed(1))
+    if (next1 > topScore && next1 <= 10.0) {
+      return next1
+    }
+    const next2 = Number((topScore + 0.05).toFixed(2))
+    return Math.min(10.0, next2 > topScore ? next2 : topScore)
   }
 
   // Inserted at bottom (worse than all albums)
   if (insertRank > existingScores.length) {
     const bottomScore = existingScores[existingScores.length - 1]
-    return Math.max(3.0, Number((bottomScore - 0.4).toFixed(1)))
+    if (bottomScore <= 0.0) return 0.0
+    const next1 = Number((bottomScore - 0.2).toFixed(1))
+    if (next1 < bottomScore && next1 >= 0.0) {
+      return next1
+    }
+    const next2 = Number((bottomScore - 0.05).toFixed(2))
+    return Math.max(0.0, next2 < bottomScore ? next2 : Math.max(0.0, bottomScore - 0.01))
   }
 
   // Inserted between two albums: index insertRank - 2 (above) and insertRank - 1 (below)
   const aboveScore = existingScores[insertRank - 2]
   const belowScore = existingScores[insertRank - 1]
 
+  // If both neighbors share the exact same score, shift slightly
   if (aboveScore === belowScore) {
-    return aboveScore
+    const shifted = Number((aboveScore - 0.05).toFixed(2))
+    return Math.max(0.0, Math.min(10.0, shifted))
   }
 
+  // Try standard 1 decimal place midpoint
   const midpoint = (aboveScore + belowScore) / 2
-  return Number(midpoint.toFixed(1))
+  const oneDecimal = Number(midpoint.toFixed(1))
+  if (oneDecimal > belowScore && oneDecimal < aboveScore) {
+    return oneDecimal
+  }
+
+  // Preserve fractional step to 2 decimal places to avoid collision (e.g. 9.1 and 9.0 -> 9.05)
+  const twoDecimal = Number(midpoint.toFixed(2))
+  if (twoDecimal > belowScore && twoDecimal < aboveScore) {
+    return twoDecimal
+  }
+
+  // For very narrow gaps, preserve 3 decimal places
+  const threeDecimal = Number(midpoint.toFixed(3))
+  if (threeDecimal > belowScore && threeDecimal < aboveScore) {
+    return threeDecimal
+  }
+
+  return midpoint
 }

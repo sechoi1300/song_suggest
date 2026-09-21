@@ -70,7 +70,39 @@ export const authOptions: NextAuthOptions = {
   callbacks: {
     async jwt({ token, user }) {
       if (user) {
-        token.id = user.id
+        if (user.email) {
+          try {
+            const dbUser = await prisma.user.upsert({
+              where: { email: user.email.toLowerCase() },
+              update: {
+                name: user.name ?? undefined,
+                image: user.image ?? undefined,
+              },
+              create: {
+                email: user.email.toLowerCase(),
+                name: user.name,
+                image: user.image,
+              },
+            })
+            token.id = dbUser.id
+          } catch (e) {
+            console.warn('Error aligning token.id with DB User.id in jwt callback:', e)
+            token.id = user.id
+          }
+        } else {
+          token.id = user.id
+        }
+      } else if (token.email && (!token.id || token.id.startsWith('demo-') || token.id.length > 30)) {
+        // Ensure token.id always resolves to actual DB User CUID
+        try {
+          const dbUser = await prisma.user.findUnique({
+            where: { email: token.email.toLowerCase() },
+            select: { id: true },
+          })
+          if (dbUser) {
+            token.id = dbUser.id
+          }
+        } catch {}
       }
       return token
     },

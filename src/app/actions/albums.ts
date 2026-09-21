@@ -211,32 +211,17 @@ export async function importOrGetAlbumFromApi(collectionIdOrId: number | string)
 export async function getAlbums(options?: AlbumFilterOptions) {
   try {
     const albums = await prisma.album.findMany({
-      include: {
-        reviews: {
-          select: {
-            rating: true,
-          },
-        },
-      },
       orderBy: {
         createdAt: 'desc',
       },
     })
 
     if (albums.length > 0) {
-      const formatted = albums.map((album) => {
-        const ratings = album.reviews.map((r) => r.rating)
-        const averageRating =
-          ratings.length > 0
-            ? Number((ratings.reduce((sum, rating) => sum + rating, 0) / ratings.length).toFixed(1))
-            : undefined
-
-        return {
-          ...album,
-          averageRating,
-          reviewCount: album.reviews.length,
-        }
-      })
+      const formatted = albums.map((album) => ({
+        ...album,
+        averageRating: album.averageRating ?? undefined,
+        reviewCount: album.reviewCount ?? 0,
+      }))
 
       return applyFiltersToAlbums(formatted, options)
     }
@@ -342,16 +327,10 @@ export async function getAlbumById(id: string) {
     })
 
     if (album) {
-      const ratings = album.reviews.map((r) => r.rating)
-      const averageRating =
-        ratings.length > 0
-          ? Number((ratings.reduce((sum, rating) => sum + rating, 0) / ratings.length).toFixed(1))
-          : undefined
-
       return {
         ...album,
-        averageRating,
-        reviewCount: album.reviews.length,
+        averageRating: album.averageRating ?? undefined,
+        reviewCount: album.reviewCount ?? album.reviews.length,
       }
     }
   } catch (error) {

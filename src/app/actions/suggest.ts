@@ -40,24 +40,6 @@ export async function getAlbumSuggestions(
     const session = await getServerSession(authOptions)
     const userId = session?.user?.id
 
-    // Fetch all albums
-    let allAlbums: SuggestedAlbum[] = []
-    try {
-      allAlbums = (await prisma.album.findMany({
-        include: {
-          reviews: {
-            select: {
-              rating: true,
-            },
-          },
-        },
-      })) as SuggestedAlbum[]
-    } catch {}
-
-    if (allAlbums.length === 0) {
-      allAlbums = SAMPLE_ALBUMS
-    }
-
     // Fetch user's rated albums & queue
     const userRatedAlbumIds = new Set<string>()
     const topGenres = new Map<string, number>()
@@ -69,7 +51,12 @@ export async function getAlbumSuggestions(
         const userReviews = await prisma.review.findMany({
           where: { userId },
           include: {
-            album: true,
+            album: {
+              select: {
+                artist: true,
+                genres: true,
+              },
+            },
           },
         })
 
@@ -85,34 +72,70 @@ export async function getAlbumSuggestions(
 
         const queue = await prisma.wantToListen.findMany({
           where: { userId },
+          select: { albumId: true },
         })
         queue.forEach((q) => queueAlbumIds.add(q.albumId))
       } catch {}
     }
 
-    // Filter unrated candidates
-    let candidates = allAlbums.filter((a) => !userRatedAlbumIds.has(a.id))
-    if (candidates.length === 0) {
-      candidates = allAlbums // If user rated everything, allow re-recommending
-    }
+    const ratedIds = Array.from(userRatedAlbumIds)
+    const queueIds = Array.from(queueAlbumIds)
 
-    // If requested only from queue
+    // Push filtering into database query (exclude already rated IDs and filter by genre)
+    const dbWhere: {
+      id?: { notIn?: string[]; in?: string[] }
+      genres?: { has: string }
+    } = {}
+
     if (criteria?.onlyFromQueue) {
-      candidates = candidates.filter((a) => queueAlbumIds.has(a.id))
+      dbWhere.id = {
+        in: queueIds,
+        ...(ratedIds.length > 0 ? { notIn: ratedIds } : {}),
+      }
+    } else if (ratedIds.length > 0) {
+      dbWhere.id = { notIn: ratedIds }
     }
 
-    // If filtered by genre
     if (criteria?.genre && criteria.genre !== 'ALL') {
-      const g = criteria.genre.toLowerCase()
-      candidates = candidates.filter((a) =>
-        a.genres.some((ag: string) => ag.toLowerCase() === g)
-      )
+      dbWhere.genres = { has: criteria.genre }
+    }
+
+    let candidates: SuggestedAlbum[] = []
+    try {
+      candidates = (await prisma.album.findMany({
+        where: dbWhere,
+        take: 30,
+        orderBy: { averageRating: 'desc' },
+      })) as unknown as SuggestedAlbum[]
+    } catch {}
+
+    // Fallback to sample catalog if database returns no candidates
+    if (candidates.length === 0) {
+      let sampleCandidates = SAMPLE_ALBUMS.filter((a) => !userRatedAlbumIds.has(a.id))
+      if (criteria?.onlyFromQueue) {
+        sampleCandidates = sampleCandidates.filter((a) => queueAlbumIds.has(a.id))
+      }
+      if (criteria?.genre && criteria.genre !== 'ALL') {
+        const g = criteria.genre.toLowerCase()
+        sampleCandidates = sampleCandidates.filter((a) =>
+          a.genres.some((ag: string) => ag.toLowerCase() === g)
+        )
+      }
+      candidates = sampleCandidates.length > 0 ? sampleCandidates : SAMPLE_ALBUMS
     }
 
     // Score candidates
     const scored: AlbumSuggestion[] = candidates.map((album) => {
       let score = 50 // base match score
       const reasons: string[] = []
+
+      // Calculate rating FIRST so database-backed albums receive the community bonus properly
+      const effectiveRating =
+        album.averageRating !== undefined && album.averageRating !== null
+          ? album.averageRating
+          : album.reviews && album.reviews.length > 0
+          ? album.reviews.reduce((s: number, r: { rating: number }) => s + r.rating, 0) / album.reviews.length
+          : 9.0
 
       // In queue?
       if (queueAlbumIds.has(album.id)) {
@@ -141,26 +164,20 @@ export async function getAlbumSuggestions(
         reasons.push(`Matches your favorite genre: ${album.genres[0]}`)
       }
 
-      // Community rating boost
-      if (album.averageRating && album.averageRating >= 9.0) {
+      // Community rating boost - evaluated after rating calculation so database-backed albums receive it properly
+      if (effectiveRating >= 9.0) {
         score += 15
-        reasons.push(`Beli Community Masterpiece (${album.averageRating.toFixed(1)}/10)`)
+        reasons.push(`Beli Community Masterpiece (${effectiveRating.toFixed(1)}/10)`)
       }
 
       if (reasons.length === 0) {
         reasons.push(`Top-rated in ${album.genres[0] || 'Music'}`)
       }
 
-      const averageRating =
-        album.averageRating ??
-        (album.reviews && album.reviews.length > 0
-          ? album.reviews.reduce((s: number, r: { rating: number }) => s + r.rating, 0) / album.reviews.length
-          : 9.0)
-
       return {
         album: {
           ...album,
-          averageRating: Number(averageRating.toFixed(1)),
+          averageRating: Number(effectiveRating.toFixed(1)),
         },
         matchScore: Math.min(99, Math.max(65, score)),
         matchReason: reasons.slice(0, 2).join(' • '),

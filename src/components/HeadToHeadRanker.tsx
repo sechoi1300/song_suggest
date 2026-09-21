@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useRef } from 'react'
 import { calculateScoreFromRankPlacement } from '@/lib/beli'
 
 export interface ExistingRankedAlbum {
@@ -35,6 +35,15 @@ export default function HeadToHeadRanker({
   const [high, setHigh] = useState(existingAlbums.length - 1)
   const [round, setRound] = useState(1)
 
+  // Audio preview state
+  const [playingAlbumId, setPlayingAlbumId] = useState<string | null>(null)
+  const [previewTrackTitle, setPreviewTrackTitle] = useState<string | null>(null)
+  const [albumPreviews, setAlbumPreviews] = useState<
+    Record<string, { trackName: string; previewUrl: string } | null>
+  >({})
+  const [loadingPreviewId, setLoadingPreviewId] = useState<string | null>(null)
+  const audioRef = useRef<HTMLAudioElement | null>(null)
+
   // Current comparison candidate index
   const midIndex = Math.floor((low + high) / 2)
   const opponent = existingAlbums[midIndex]
@@ -42,7 +51,14 @@ export default function HeadToHeadRanker({
   // Total comparisons needed ~ ceil(log2(N))
   const estimatedRounds = Math.max(1, Math.ceil(Math.log2(existingAlbums.length + 1)))
 
+  const stopAudio = () => {
+    audioRef.current?.pause()
+    setPlayingAlbumId(null)
+    setPreviewTrackTitle(null)
+  }
+
   const handleChoice = (winner: 'CURRENT' | 'OPPONENT') => {
+    stopAudio()
     let newLow = low
     let newHigh = high
 
@@ -56,7 +72,6 @@ export default function HeadToHeadRanker({
 
     if (newLow > newHigh) {
       // Found the insertion rank!
-      // newLow is 0-based index where current album should be placed
       const finalRank = newLow + 1 // 1-based rank
       const existingScores = existingAlbums.map((a) => a.rating)
       const calculatedScore = calculateScoreFromRankPlacement(finalRank, existingScores)
@@ -69,10 +84,89 @@ export default function HeadToHeadRanker({
   }
 
   const handleSkipOrEven = () => {
-    // Places it right next to opponent with equal or slightly lower score
+    stopAudio()
     const finalRank = midIndex + 1
     const calculatedScore = Number(opponent.rating.toFixed(1))
     onRankDetermined({ rank: finalRank, score: calculatedScore })
+  }
+
+  const handlePlayPreview = async (
+    e: React.MouseEvent,
+    album: { id: string; title: string; artist: string[] }
+  ) => {
+    e.stopPropagation()
+
+    if (playingAlbumId === album.id) {
+      stopAudio()
+      return
+    }
+
+    let preview = albumPreviews[album.id]
+    if (preview === undefined) {
+      setLoadingPreviewId(album.id)
+      try {
+        let fetchUrl = ''
+        if (album.id.startsWith('itunes-')) {
+          fetchUrl = `/api/music/details?id=${encodeURIComponent(album.id)}`
+        } else {
+          fetchUrl = `/api/music/autocomplete?q=${encodeURIComponent(
+            `${album.title} ${album.artist[0] || ''}`
+          )}`
+        }
+        const res = await fetch(fetchUrl)
+        if (res.ok) {
+          const data = await res.json()
+          let foundPreviewUrl: string | undefined
+          let foundTrackName = 'Sample Track'
+
+          if (data.album?.tracks && data.album.tracks.length > 0) {
+            const firstWithAudio = data.album.tracks.find((t: { previewUrl?: string }) =>
+              Boolean(t.previewUrl)
+            )
+            if (firstWithAudio) {
+              foundPreviewUrl = firstWithAudio.previewUrl
+              foundTrackName = firstWithAudio.name
+            }
+          } else if (data.results && data.results.length > 0) {
+            const firstResult = data.results[0]
+            if (firstResult.collectionId) {
+              const detRes = await fetch(`/api/music/details?id=${firstResult.collectionId}`)
+              if (detRes.ok) {
+                const detData = await detRes.json()
+                const firstWithAudio = detData.album?.tracks?.find(
+                  (t: { previewUrl?: string }) => Boolean(t.previewUrl)
+                )
+                if (firstWithAudio) {
+                  foundPreviewUrl = firstWithAudio.previewUrl
+                  foundTrackName = firstWithAudio.name
+                }
+              }
+            }
+          }
+
+          if (foundPreviewUrl) {
+            preview = { trackName: foundTrackName, previewUrl: foundPreviewUrl }
+          } else {
+            preview = null
+          }
+        }
+      } catch (err) {
+        console.warn('Could not load preview for album:', err)
+        preview = null
+      } finally {
+        setLoadingPreviewId(null)
+      }
+      setAlbumPreviews((prev) => ({ ...prev, [album.id]: preview }))
+    }
+
+    if (preview?.previewUrl) {
+      if (audioRef.current) {
+        audioRef.current.src = preview.previewUrl
+        audioRef.current.play().catch((err) => console.warn('Preview play error:', err))
+      }
+      setPlayingAlbumId(album.id)
+      setPreviewTrackTitle(preview.trackName)
+    }
   }
 
   if (!opponent) {
@@ -81,6 +175,19 @@ export default function HeadToHeadRanker({
 
   return (
     <div className="bg-[#F5F1E9] border border-[#E3DCCE] rounded-2xl p-6 shadow-xs relative">
+      <audio
+        ref={audioRef}
+        onEnded={() => {
+          setPlayingAlbumId(null)
+          setPreviewTrackTitle(null)
+        }}
+        onError={() => {
+          setPlayingAlbumId(null)
+          setPreviewTrackTitle(null)
+        }}
+        className="hidden"
+      />
+
       {/* Header */}
       <div className="text-center mb-6 relative">
         <div className="inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-[#EAE4D9] border border-[#D9D1C3] text-stone-800 text-xs font-medium mb-2">
@@ -92,7 +199,7 @@ export default function HeadToHeadRanker({
           Which album do you prefer?
         </h3>
         <p className="text-stone-600 text-sm mt-1">
-          Pick your favorite to pinpoint where it slots into your personal leaderboard.
+          Listen to previews or pick your favorite to pinpoint its rank on your leaderboard.
         </p>
       </div>
 
@@ -104,30 +211,55 @@ export default function HeadToHeadRanker({
           onClick={() => handleChoice('CURRENT')}
           className="group relative bg-white hover:bg-stone-50 border border-[#EAE4D9] hover:border-stone-400 rounded-2xl p-5 text-left transition-all duration-200 hover:scale-[1.01] active:scale-[0.99] flex flex-col justify-between cursor-pointer shadow-xs"
         >
-          <div className="flex items-center space-x-4 mb-4">
-            {currentAlbum.coverImageUrl ? (
-              <img
-                src={currentAlbum.coverImageUrl}
-                alt={currentAlbum.title}
-                className="w-20 h-20 rounded-xl object-cover shadow-sm border border-[#EAE4D9]"
-              />
-            ) : (
-              <div className="w-20 h-20 rounded-xl bg-[#EAE4D9] flex items-center justify-center text-stone-700 text-2xl font-bold">
-                {currentAlbum.title.charAt(0)}
+          <div>
+            <div className="flex items-center space-x-4 mb-4">
+              {currentAlbum.coverImageUrl ? (
+                <img
+                  src={currentAlbum.coverImageUrl}
+                  alt={currentAlbum.title}
+                  className="w-20 h-20 rounded-xl object-cover shadow-sm border border-[#EAE4D9]"
+                />
+              ) : (
+                <div className="w-20 h-20 rounded-xl bg-[#EAE4D9] flex items-center justify-center text-stone-700 text-2xl font-bold">
+                  {currentAlbum.title.charAt(0)}
+                </div>
+              )}
+              <div className="flex-1 min-w-0">
+                <span className="inline-block text-[10px] uppercase font-semibold tracking-wider px-2 py-0.5 rounded bg-[#EAE4D9] text-stone-800 mb-1">
+                  New Album
+                </span>
+                <h4 className="text-lg font-bold text-stone-900 truncate group-hover:text-stone-700 transition-colors">
+                  {currentAlbum.title}
+                </h4>
+                <p className="text-sm text-stone-500 truncate">
+                  {Array.isArray(currentAlbum.artist)
+                    ? currentAlbum.artist.join(', ')
+                    : currentAlbum.artist}
+                </p>
               </div>
-            )}
-            <div className="flex-1 min-w-0">
-              <span className="inline-block text-[10px] uppercase font-semibold tracking-wider px-2 py-0.5 rounded bg-[#EAE4D9] text-stone-800 mb-1">
-                New Album
+            </div>
+
+            {/* Inline 30s Audio Preview Button */}
+            <div className="mb-4">
+              <span
+                onClick={(e) => handlePlayPreview(e, currentAlbum)}
+                className={`inline-flex items-center space-x-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
+                  playingAlbumId === currentAlbum.id
+                    ? 'bg-stone-900 text-stone-50 shadow-xs'
+                    : 'bg-[#FAF7F2] hover:bg-[#EAE4D9] text-stone-700 border border-[#D9D1C3]'
+                }`}
+              >
+                {loadingPreviewId === currentAlbum.id ? (
+                  <span className="w-3 h-3 border-2 border-stone-600 border-t-transparent rounded-full animate-spin" />
+                ) : (
+                  <span>{playingAlbumId === currentAlbum.id ? '⏸ Pause' : '▶ 30s Audio Preview'}</span>
+                )}
+                {playingAlbumId === currentAlbum.id && previewTrackTitle && (
+                  <span className="truncate max-w-[130px] text-stone-300 font-normal text-[11px]">
+                    • {previewTrackTitle}
+                  </span>
+                )}
               </span>
-              <h4 className="text-lg font-bold text-stone-900 truncate group-hover:text-stone-700 transition-colors">
-                {currentAlbum.title}
-              </h4>
-              <p className="text-sm text-stone-500 truncate">
-                {Array.isArray(currentAlbum.artist)
-                  ? currentAlbum.artist.join(', ')
-                  : currentAlbum.artist}
-              </p>
             </div>
           </div>
 
@@ -147,33 +279,64 @@ export default function HeadToHeadRanker({
           onClick={() => handleChoice('OPPONENT')}
           className="group relative bg-white hover:bg-stone-50 border border-[#EAE4D9] hover:border-stone-400 rounded-2xl p-5 text-left transition-all duration-200 hover:scale-[1.01] active:scale-[0.99] flex flex-col justify-between cursor-pointer shadow-xs"
         >
-          <div className="flex items-center space-x-4 mb-4">
-            {opponent.coverImageUrl ? (
-              <img
-                src={opponent.coverImageUrl}
-                alt={opponent.title}
-                className="w-20 h-20 rounded-xl object-cover shadow-sm border border-[#EAE4D9]"
-              />
-            ) : (
-              <div className="w-20 h-20 rounded-xl bg-[#EAE4D9] flex items-center justify-center text-stone-700 text-2xl font-bold">
-                {opponent.title.charAt(0)}
+          <div>
+            <div className="flex items-center space-x-4 mb-4">
+              {opponent.coverImageUrl ? (
+                <img
+                  src={opponent.coverImageUrl}
+                  alt={opponent.title}
+                  className="w-20 h-20 rounded-xl object-cover shadow-sm border border-[#EAE4D9]"
+                />
+              ) : (
+                <div className="w-20 h-20 rounded-xl bg-[#EAE4D9] flex items-center justify-center text-stone-700 text-2xl font-bold">
+                  {opponent.title.charAt(0)}
+                </div>
+              )}
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center space-x-2 mb-1">
+                  <span className="text-xs font-semibold text-stone-800 bg-[#EAE4D9] px-2 py-0.5 rounded">
+                    Rank #{opponent.rank}
+                  </span>
+                  <span className="text-xs font-semibold text-stone-700">
+                    ★ {opponent.rating.toFixed(1)}
+                  </span>
+                </div>
+                <h4 className="text-lg font-bold text-stone-900 truncate group-hover:text-stone-700 transition-colors">
+                  {opponent.title}
+                </h4>
+                <p className="text-sm text-stone-500 truncate">
+                  {Array.isArray(opponent.artist) ? opponent.artist.join(', ') : opponent.artist}
+                </p>
               </div>
-            )}
-            <div className="flex-1 min-w-0">
-              <div className="flex items-center space-x-2 mb-1">
-                <span className="text-xs font-semibold text-stone-800 bg-[#EAE4D9] px-2 py-0.5 rounded">
-                  Rank #{opponent.rank}
-                </span>
-                <span className="text-xs font-semibold text-stone-700">
-                  ★ {opponent.rating.toFixed(1)}
-                </span>
-              </div>
-              <h4 className="text-lg font-bold text-stone-900 truncate group-hover:text-stone-700 transition-colors">
-                {opponent.title}
-              </h4>
-              <p className="text-sm text-stone-500 truncate">
-                {Array.isArray(opponent.artist) ? opponent.artist.join(', ') : opponent.artist}
-              </p>
+            </div>
+
+            {/* Inline 30s Audio Preview Button */}
+            <div className="mb-4">
+              <span
+                onClick={(e) =>
+                  handlePlayPreview(e, {
+                    id: opponent.albumId,
+                    title: opponent.title,
+                    artist: opponent.artist,
+                  })
+                }
+                className={`inline-flex items-center space-x-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
+                  playingAlbumId === opponent.albumId
+                    ? 'bg-stone-900 text-stone-50 shadow-xs'
+                    : 'bg-[#FAF7F2] hover:bg-[#EAE4D9] text-stone-700 border border-[#D9D1C3]'
+                }`}
+              >
+                {loadingPreviewId === opponent.albumId ? (
+                  <span className="w-3 h-3 border-2 border-stone-600 border-t-transparent rounded-full animate-spin" />
+                ) : (
+                  <span>{playingAlbumId === opponent.albumId ? '⏸ Pause' : '▶ 30s Audio Preview'}</span>
+                )}
+                {playingAlbumId === opponent.albumId && previewTrackTitle && (
+                  <span className="truncate max-w-[130px] text-stone-300 font-normal text-[11px]">
+                    • {previewTrackTitle}
+                  </span>
+                )}
+              </span>
             </div>
           </div>
 

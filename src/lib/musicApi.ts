@@ -1,4 +1,8 @@
-import https from 'https'
+export interface MusicApiTrack {
+  name: string
+  previewUrl?: string
+  trackTimeMillis?: number
+}
 
 export interface MusicApiAlbumResult {
   collectionId: number
@@ -11,46 +15,29 @@ export interface MusicApiAlbumResult {
   coverImageUrl: string
   numSongs: number
   tracklist?: string[]
+  tracks?: MusicApiTrack[]
+  previewUrl?: string
   length?: string
   source: 'api'
 }
 
-function fetchJsonOverHttps<T>(url: string): Promise<T> {
-  return new Promise((resolve, reject) => {
-    const agent = new https.Agent({ rejectUnauthorized: false })
-    const req = https.get(url, { agent, timeout: 8000 }, (res) => {
-      if (res.statusCode && (res.statusCode < 200 || res.statusCode >= 300)) {
-        res.resume()
-        return reject(new Error(`API responded with status code ${res.statusCode}`))
-      }
-
-      let rawData = ''
-      res.setEncoding('utf8')
-      res.on('data', (chunk) => {
-        rawData += chunk
-      })
-      res.on('end', () => {
-        try {
-          const parsed = JSON.parse(rawData) as T
-          resolve(parsed)
-        } catch (e) {
-          reject(e)
-        }
-      })
-    })
-
-    req.on('timeout', () => {
-      req.destroy(new Error('Request timed out'))
-    })
-
-    req.on('error', (err) => {
-      reject(err)
-    })
+async function fetchJsonFromApi<T>(url: string): Promise<T> {
+  const res = await fetch(url, {
+    next: { revalidate: 3600 },
+    headers: {
+      Accept: 'application/json',
+    },
   })
+
+  if (!res.ok) {
+    throw new Error(`API responded with status code ${res.status}`)
+  }
+
+  return (await res.json()) as T
 }
 
 /**
- * Searches for albums using the free iTunes Search API.
+ * Searches for albums using the free iTunes Search API with native fetch and Next.js caching.
  * No API key required.
  */
 export async function searchAlbumsFromMusicApi(
@@ -78,7 +65,7 @@ export async function searchAlbumsFromMusicApi(
       }>
     }
 
-    const data = await fetchJsonOverHttps<ITunesSearchResponse>(url)
+    const data = await fetchJsonFromApi<ITunesSearchResponse>(url)
 
     if (!data.results || data.results.length === 0) {
       return []
@@ -119,7 +106,7 @@ export async function searchAlbumsFromMusicApi(
 }
 
 /**
- * Fetches full album details including tracklist and total length.
+ * Fetches full album details including tracklist, 30-second audio preview URLs, and total length.
  */
 export async function getAlbumDetailsFromMusicApi(
   collectionId: number
@@ -140,22 +127,29 @@ export async function getAlbumDetailsFromMusicApi(
         trackCount?: number
         trackName?: string
         trackTimeMillis?: number
+        previewUrl?: string
       }>
     }
 
-    const data = await fetchJsonOverHttps<ITunesLookupResponse>(url)
+    const data = await fetchJsonFromApi<ITunesLookupResponse>(url)
 
     if (!data.results || data.results.length === 0) {
       return null
     }
 
     const collection = data.results[0]
-    const tracks = data.results.filter(
+    const tracksRaw = data.results.filter(
       (r) => r.wrapperType === 'track' && Boolean(r.trackName)
     )
 
-    const tracklist = tracks.map((t) => t.trackName as string)
-    const totalMs = tracks.reduce((sum, t) => sum + (t.trackTimeMillis || 0), 0)
+    const tracks: MusicApiTrack[] = tracksRaw.map((t) => ({
+      name: t.trackName as string,
+      previewUrl: t.previewUrl,
+      trackTimeMillis: t.trackTimeMillis,
+    }))
+
+    const tracklist = tracks.map((t) => t.name)
+    const totalMs = tracksRaw.reduce((sum, t) => sum + (t.trackTimeMillis || 0), 0)
 
     let formattedLength: string | undefined
     if (totalMs > 0) {
@@ -177,6 +171,8 @@ export async function getAlbumDetailsFromMusicApi(
       ? collection.artistName.split(/[,&]/).map((a) => a.trim()).filter(Boolean)
       : ['Unknown Artist']
 
+    const firstPreviewUrl = tracks.find((t) => Boolean(t.previewUrl))?.previewUrl
+
     return {
       collectionId,
       id: `itunes-${collectionId}`,
@@ -188,6 +184,8 @@ export async function getAlbumDetailsFromMusicApi(
       coverImageUrl: highResArt,
       numSongs: tracks.length || collection.trackCount || 0,
       tracklist,
+      tracks,
+      previewUrl: firstPreviewUrl,
       length: formattedLength,
       source: 'api',
     }

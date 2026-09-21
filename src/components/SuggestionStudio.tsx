@@ -91,11 +91,17 @@ export default function SuggestionStudio({
           </button>
 
           <div className="flex flex-col sm:flex-row items-center gap-6">
-            <img
-              src={surprisePick.album.coverImageUrl}
-              alt={surprisePick.album.title}
-              className="w-32 h-32 rounded-2xl object-cover shadow-sm border border-[#EAE4D9] flex-shrink-0"
-            />
+            {surprisePick.album.coverImageUrl ? (
+              <img
+                src={surprisePick.album.coverImageUrl}
+                alt={surprisePick.album.title}
+                className="w-32 h-32 rounded-2xl object-cover shadow-sm border border-[#EAE4D9] flex-shrink-0"
+              />
+            ) : (
+              <div className="w-32 h-32 rounded-2xl bg-[#EAE4D9] flex items-center justify-center text-stone-700 text-3xl font-bold flex-shrink-0">
+                {surprisePick.album.title.charAt(0)}
+              </div>
+            )}
             <div className="flex-1 text-center sm:text-left">
               <span className="text-xs font-semibold uppercase tracking-wider text-stone-500">
                 Your Chosen Listen for Today
@@ -234,7 +240,7 @@ export default function SuggestionStudio({
                       <div className="flex items-center space-x-1.5 text-xs font-semibold text-stone-800 bg-[#F4EFE6] px-2.5 py-0.5 rounded-full border border-[#E5DEC7]">
                         <span>⚡ {item.matchScore}% Match</span>
                       </div>
-                      {tier && (
+                      {tier && item.album.averageRating !== undefined && (
                         <div
                           className={`text-[10px] font-bold px-2 py-0.5 rounded-md border ${tier.badgeBg} ${tier.borderColor} ${tier.textColor}`}
                         >

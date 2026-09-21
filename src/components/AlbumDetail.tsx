@@ -1,5 +1,6 @@
 'use client'
 
+import { useState, useEffect, useRef } from 'react'
 import ReviewForm from './ReviewForm'
 import ReviewList from './ReviewList'
 import { ExistingRankedAlbum } from './HeadToHeadRanker'
@@ -38,6 +39,7 @@ interface AlbumDetailProps {
     genres: string[]
     coverImageUrl?: string | null
     tracklist?: string[]
+    tracks?: Array<{ name: string; previewUrl?: string }>
     description?: string
     averageRating?: number
     reviewCount?: number
@@ -54,12 +56,52 @@ export default function AlbumDetail({
   existingRankedAlbums = [],
   isBookmarked = false,
 }: AlbumDetailProps) {
+  const [playingTrack, setPlayingTrack] = useState<string | null>(null)
+  const [previewUrls, setPreviewUrls] = useState<Record<string, string>>({})
+  const audioRef = useRef<HTMLAudioElement | null>(null)
+
   const formatDate = (date: Date | string) => {
     const d = typeof date === 'string' ? new Date(date) : date
     return d.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })
   }
 
   const tier = album.averageRating ? getTierFromScore(album.averageRating) : null
+
+  // Fetch audio preview URLs for tracklist if from Apple Music / iTunes
+  useEffect(() => {
+    if (album.id.startsWith('itunes-')) {
+      fetch(`/api/music/details?id=${encodeURIComponent(album.id)}`)
+        .then((res) => (res.ok ? res.json() : null))
+        .then((data) => {
+          if (data?.album?.tracks) {
+            const map: Record<string, string> = {}
+            data.album.tracks.forEach((t: { name: string; previewUrl?: string }) => {
+              if (t.previewUrl) {
+                map[t.name.toLowerCase().trim()] = t.previewUrl
+              }
+            })
+            setPreviewUrls(map)
+          }
+        })
+        .catch((err) => console.warn('Could not load track audio previews:', err))
+    }
+  }, [album.id])
+
+  const handleTogglePlay = (trackTitle: string, explicitPreviewUrl?: string) => {
+    const url = explicitPreviewUrl || previewUrls[trackTitle.toLowerCase().trim()]
+    if (!url) return
+
+    if (playingTrack === trackTitle) {
+      audioRef.current?.pause()
+      setPlayingTrack(null)
+    } else {
+      if (audioRef.current) {
+        audioRef.current.src = url
+        audioRef.current.play().catch((err) => console.warn('Audio play error:', err))
+      }
+      setPlayingTrack(trackTitle)
+    }
+  }
 
   return (
     <div className="space-y-8">
@@ -178,22 +220,74 @@ export default function AlbumDetail({
         </div>
       </div>
 
-      {/* Tracklist Preview */}
+      {/* Tracklist Preview with 30s Audio Previews */}
       {album.tracklist && album.tracklist.length > 0 && (
         <div className="bg-white border border-[#EAE4D9] rounded-3xl p-6 shadow-xs">
-          <h3 className="text-lg font-bold text-stone-900 mb-4 flex items-center space-x-2">
-            <span>🎼 Tracklist ({album.tracklist.length} tracks)</span>
-          </h3>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-            {album.tracklist.map((track, i) => (
-              <div
-                key={i}
-                className="flex items-center space-x-3 px-3 py-2 rounded-xl bg-[#FAF7F2] border border-[#EAE4D9] text-xs"
-              >
-                <span className="w-5 font-mono text-stone-400 text-right">{i + 1}</span>
-                <span className="text-stone-800 font-medium truncate">{track}</span>
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-lg font-bold text-stone-900 flex items-center space-x-2">
+              <span>🎼 Tracklist ({album.tracklist.length} tracks)</span>
+            </h3>
+            {playingTrack && (
+              <div className="flex items-center space-x-2 px-3 py-1 bg-stone-900 text-stone-100 text-xs rounded-full shadow-xs animate-in fade-in">
+                <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+                <span className="truncate max-w-[160px] sm:max-w-xs">Playing preview: {playingTrack}</span>
+                <button
+                  type="button"
+                  onClick={() => handleTogglePlay(playingTrack)}
+                  className="hover:text-stone-300 font-bold ml-1 cursor-pointer"
+                >
+                  ✕
+                </button>
               </div>
-            ))}
+            )}
+          </div>
+
+          <audio
+            ref={audioRef}
+            onEnded={() => setPlayingTrack(null)}
+            onError={() => setPlayingTrack(null)}
+            className="hidden"
+          />
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+            {album.tracklist.map((track, i) => {
+              const url = previewUrls[track.toLowerCase().trim()]
+              const isPlaying = playingTrack === track
+
+              return (
+                <div
+                  key={i}
+                  className={`flex items-center justify-between space-x-3 px-3.5 py-2.5 rounded-xl border text-xs transition-colors ${
+                    isPlaying
+                      ? 'bg-[#EAE4D9] border-stone-400 text-stone-900 font-semibold'
+                      : 'bg-[#FAF7F2] border-[#EAE4D9] text-stone-800'
+                  }`}
+                >
+                  <div className="flex items-center space-x-2.5 min-w-0">
+                    <span className="w-5 font-mono text-stone-400 text-right flex-shrink-0">
+                      {i + 1}
+                    </span>
+                    <span className="truncate font-medium">{track}</span>
+                  </div>
+
+                  {url && (
+                    <button
+                      type="button"
+                      onClick={() => handleTogglePlay(track, url)}
+                      title={isPlaying ? 'Pause preview' : 'Listen to 30s audio preview'}
+                      className={`flex-shrink-0 px-2 py-1 rounded-lg text-[10px] font-bold flex items-center space-x-1 transition-all cursor-pointer ${
+                        isPlaying
+                          ? 'bg-stone-900 text-stone-50 shadow-xs'
+                          : 'bg-white hover:bg-stone-200 text-stone-700 border border-[#D9D1C3]'
+                      }`}
+                    >
+                      <span>{isPlaying ? '⏸' : '▶'}</span>
+                      <span className="hidden sm:inline">{isPlaying ? 'Pause' : '30s'}</span>
+                    </button>
+                  )}
+                </div>
+              )
+            })}
           </div>
         </div>
       )}

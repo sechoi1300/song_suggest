@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import { reorderUserRankedReviews, deleteReview } from '@/app/actions/reviews'
-import { getTierFromScore, BELI_TIERS } from '@/lib/beli'
+import { getTierFromScore, BELI_TIERS, calculateScoreFromRankPlacement } from '@/lib/beli'
 
 export interface RankedAlbumItem {
   id: string // reviewId
@@ -48,15 +48,34 @@ export default function PersonalLeaderboard({ initialReviews }: PersonalLeaderbo
     const [movedItem] = newReviews.splice(index, 1)
     newReviews.splice(targetIndex, 0, movedItem)
 
-    // Re-assign ranks 1..N
-    const updated = newReviews.map((item, idx) => ({
-      ...item,
-      rank: idx + 1,
-    }))
+    // Calculate updated rank and recalculate rating/tier for moved item based on new neighbors
+    const otherScores = newReviews
+      .filter((_, idx) => idx !== targetIndex)
+      .map((r) => r.rating)
+    const newScore = calculateScoreFromRankPlacement(targetIndex + 1, otherScores)
+    const newTier = getTierFromScore(newScore).tier
+
+    const updated = newReviews.map((item, idx) => {
+      if (idx === targetIndex) {
+        return {
+          ...item,
+          rank: idx + 1,
+          rating: newScore,
+          tier: newTier,
+        }
+      }
+      return {
+        ...item,
+        rank: idx + 1,
+      }
+    })
 
     setReviews(updated)
     setIsUpdating(true)
-    await reorderUserRankedReviews(updated.map((r) => r.id))
+    const res = await reorderUserRankedReviews(updated.map((r) => r.id))
+    if (res.success && res.reviews) {
+      setReviews((res.reviews as unknown) as RankedAlbumItem[])
+    }
     setIsUpdating(false)
   }
 

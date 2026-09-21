@@ -71,6 +71,8 @@ model Album {
   coverImageUrl String?
   spotifyUrl    String?
   tracklist     String[]       // Array of track titles
+  averageRating Float?
+  reviewCount   Int            @default(0)
   reviews       Review[]
   wantToListen  WantToListen[]
   createdAt     DateTime       @default(now())
@@ -78,6 +80,7 @@ model Album {
 
   @@index([title])
   @@index([genres])
+  @@index([averageRating])
 }
 
 model Review {
