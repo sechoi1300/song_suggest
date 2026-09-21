@@ -36,11 +36,11 @@ Built with **Next.js 16 (App Router)**, **PostgreSQL (via Prisma ORM & pg driver
 - Bookmark upcoming releases or friend recommendations.
 - When you rank an album, it automatically moves from your queue to your personal leaderboard!
 
-### 🌐 6. Free Music Metadata API & Live Auto-Complete
+### 🌐 6. Free Music Metadata API & Search-First Auto-Complete
 - Connected to Apple Music/iTunes free public metadata API (no API key required).
-- **Instant Auto-Complete as you type**: Start typing any album name (e.g. *In Rainbows*, *Currents*, *Folklore*, *Abbey Road*) in the search bar or in the Add Album form.
-- A sleek dropdown appears with live suggestions including high-resolution artwork, artist, release year, genre, and track count.
-- In **Add Album**, selecting an autocomplete suggestion automatically fills in the title, artist, release date, track count, genre, artwork, and full tracklist!
+- **Search-First with Auto-Complete**: On the Add Album page, users are greeted with a clean search bar that queries the live API as they type.
+- Selecting any suggestion pulls high-resolution artwork, tracklist, duration, release date, and genre automatically into the form for review.
+- **"Or, add manually" Option**: Can't find an obscure or unreleased album? Clicking "Or, add manually" reveals the blank manual entry fields to add anything custom.
 - In **Discover / Search**, selecting any suggested album automatically loads it so you can immediately rate it, rank it head-to-head, or save it to your queue.
 
 ### ✨ 7. AI & Taste Profile Suggestion Engine (`/suggest`)

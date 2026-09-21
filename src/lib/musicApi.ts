@@ -196,3 +196,55 @@ export async function getAlbumDetailsFromMusicApi(
     return null
   }
 }
+
+let cachedFeaturedAlbums: MusicApiAlbumResult[] | null = null
+let lastFetchedTime = 0
+
+/**
+ * Fetches featured albums dynamically from the Music API across diverse artists & genres.
+ */
+export async function getFeaturedAlbumsFromApi(): Promise<MusicApiAlbumResult[]> {
+  if (cachedFeaturedAlbums && Date.now() - lastFetchedTime < 1000 * 60 * 30) {
+    return cachedFeaturedAlbums
+  }
+
+  const queries = [
+    'Kendrick Lamar',
+    'Radiohead',
+    'Daft Punk',
+    'Fleetwood Mac',
+    'The Beatles',
+    'Taylor Swift',
+    'Billie Eilish',
+    'Pink Floyd',
+    'SZA',
+  ]
+
+  try {
+    const results = await Promise.all(
+      queries.map((q) => searchAlbumsFromMusicApi(q, 2))
+    )
+
+    const albums: MusicApiAlbumResult[] = []
+    const seen = new Set<string>()
+
+    for (const group of results) {
+      for (const item of group) {
+        if (!seen.has(item.id)) {
+          seen.add(item.id)
+          albums.push(item)
+        }
+      }
+    }
+
+    if (albums.length > 0) {
+      cachedFeaturedAlbums = albums
+      lastFetchedTime = Date.now()
+      return albums
+    }
+  } catch (err) {
+    console.warn('Failed to fetch live featured albums from API:', err)
+  }
+
+  return []
+}
