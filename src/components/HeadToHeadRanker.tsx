@@ -119,9 +119,9 @@ export default function HeadToHeadRanker({
         if (album.id.startsWith('itunes-')) {
           fetchUrl = `/api/music/details?id=${encodeURIComponent(album.id)}`
         } else {
-          fetchUrl = `/api/music/autocomplete?q=${encodeURIComponent(
-            `${album.title} ${album.artist[0] || ''}`
-          )}`
+          fetchUrl = `/api/music/details?title=${encodeURIComponent(
+            album.title
+          )}&artist=${encodeURIComponent(album.artist[0] || '')}`
         }
         const res = await fetch(fetchUrl)
         if (res.ok) {
@@ -137,25 +137,13 @@ export default function HeadToHeadRanker({
               foundPreviewUrl = firstWithAudio.previewUrl
               foundTrackName = firstWithAudio.name
             }
-          } else if (data.results && data.results.length > 0) {
-            const firstResult = data.results[0]
-            if (firstResult.collectionId) {
-              const detRes = await fetch(`/api/music/details?id=${firstResult.collectionId}`)
-              if (detRes.ok) {
-                const detData = await detRes.json()
-                const firstWithAudio = detData.album?.tracks?.find(
-                  (t: { previewUrl?: string }) => Boolean(t.previewUrl)
-                )
-                if (firstWithAudio) {
-                  foundPreviewUrl = firstWithAudio.previewUrl
-                  foundTrackName = firstWithAudio.name
-                }
-              }
-            }
           }
 
           if (foundPreviewUrl) {
-            preview = { trackName: foundTrackName, previewUrl: foundPreviewUrl }
+            const safeUrl = foundPreviewUrl.startsWith('/api/music/proxy-audio')
+              ? foundPreviewUrl
+              : `/api/music/proxy-audio?url=${encodeURIComponent(foundPreviewUrl)}`
+            preview = { trackName: foundTrackName, previewUrl: safeUrl }
           } else {
             preview = null
           }
@@ -171,8 +159,17 @@ export default function HeadToHeadRanker({
 
     if (preview?.previewUrl) {
       if (audioRef.current) {
+        audioRef.current.pause()
         audioRef.current.src = preview.previewUrl
-        audioRef.current.play().catch((err) => console.warn('Preview play error:', err))
+        audioRef.current.currentTime = 0
+        setPlaybackProgress(0)
+        const p = audioRef.current.play()
+        if (p !== undefined) {
+          p.catch((err) => {
+            console.warn('Preview play error:', err)
+            stopAudio()
+          })
+        }
       }
       setPlayingAlbumId(album.id)
       setPreviewTrackTitle(preview.trackName)
@@ -187,25 +184,21 @@ export default function HeadToHeadRanker({
     <div className="bg-[#F5F1E9] border border-[#E3DCCE] rounded-2xl p-6 shadow-xs relative">
       <audio
         ref={audioRef}
+        preload="metadata"
         onTimeUpdate={handleTimeUpdate}
         onEnded={stopAudio}
-        onError={stopAudio}
+        onError={() => stopAudio()}
         className="hidden"
       />
 
       {/* Header */}
-      <div className="text-center mb-6 relative">
-        <div className="inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-[#EAE4D9] border border-[#D9D1C3] text-stone-800 text-xs font-medium mb-2">
-          <span>⚔️ Head-to-Head Ranking</span>
-          <span>•</span>
-          <span>Match {round} of ~{estimatedRounds}</span>
-        </div>
-        <h3 className="text-2xl font-black text-stone-900 tracking-tight">
+      <div className="text-center mb-6">
+        <span className="text-xs font-mono text-stone-400 uppercase tracking-wider block mb-1">
+          Round {round} of {estimatedRounds}
+        </span>
+        <h3 className="text-xl sm:text-2xl font-semibold text-stone-900 tracking-tight">
           Which album do you prefer?
         </h3>
-        <p className="text-stone-600 text-sm mt-1">
-          Listen to previews or pick your favorite to pinpoint its rank on your leaderboard.
-        </p>
       </div>
 
       {/* VS Matchup Arena */}
@@ -222,21 +215,21 @@ export default function HeadToHeadRanker({
                 <img
                   src={currentAlbum.coverImageUrl}
                   alt={currentAlbum.title}
-                  className="w-20 h-20 rounded-xl object-cover shadow-sm border border-[#EAE4D9]"
+                  className="w-18 h-18 rounded-xl object-cover shadow-xs border border-[#EAE4D9]"
                 />
               ) : (
-                <div className="w-20 h-20 rounded-xl bg-[#EAE4D9] flex items-center justify-center text-stone-700 text-2xl font-bold">
+                <div className="w-18 h-18 rounded-xl bg-[#EAE4D9] flex items-center justify-center text-stone-700 text-2xl font-bold">
                   {currentAlbum.title.charAt(0)}
                 </div>
               )}
               <div className="flex-1 min-w-0">
-                <span className="inline-block text-[10px] uppercase font-semibold tracking-wider px-2 py-0.5 rounded bg-[#EAE4D9] text-stone-800 mb-1">
-                  New Album
+                <span className="inline-block text-[10px] font-medium tracking-wide px-2 py-0.5 rounded bg-[#FAF7F2] text-stone-600 mb-1 border border-[#EAE4D9]">
+                  New
                 </span>
-                <h4 className="text-lg font-bold text-stone-900 truncate group-hover:text-stone-700 transition-colors">
+                <h4 className="text-base font-semibold text-stone-900 truncate group-hover:text-stone-700 transition-colors">
                   {currentAlbum.title}
                 </h4>
-                <p className="text-sm text-stone-500 truncate">
+                <p className="text-xs text-stone-500 truncate">
                   {Array.isArray(currentAlbum.artist)
                     ? currentAlbum.artist.join(', ')
                     : currentAlbum.artist}
@@ -248,7 +241,7 @@ export default function HeadToHeadRanker({
             <div className="mb-4">
               <span
                 onClick={(e) => handlePlayPreview(e, currentAlbum)}
-                className={`relative overflow-hidden inline-flex items-center space-x-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
+                className={`relative overflow-hidden inline-flex items-center space-x-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all cursor-pointer ${
                   playingAlbumId === currentAlbum.id
                     ? 'bg-[#EAE4D9] text-stone-900 border border-stone-400 shadow-xs'
                     : 'bg-[#FAF7F2] hover:bg-[#EAE4D9] text-stone-700 border border-[#D9D1C3]'
@@ -263,7 +256,7 @@ export default function HeadToHeadRanker({
                 )}
                 {/* Darker progress bar line along the bottom */}
                 {playingAlbumId === currentAlbum.id && (
-                  <div className="absolute bottom-0 left-0 right-0 h-[2.5px] bg-stone-300/70 overflow-hidden pointer-events-none">
+                  <div className="absolute bottom-0 left-0 right-0 h-[2px] bg-stone-300/70 overflow-hidden pointer-events-none">
                     <div
                       className="h-full bg-stone-900 transition-[width] duration-150 ease-linear"
                       style={{ width: `${playbackProgress}%` }}
@@ -275,11 +268,11 @@ export default function HeadToHeadRanker({
                   {loadingPreviewId === currentAlbum.id ? (
                     <span className="w-3 h-3 border-2 border-stone-600 border-t-transparent rounded-full animate-spin" />
                   ) : (
-                    <span>{playingAlbumId === currentAlbum.id ? '⏸ Pause' : '▶ 30s Audio Preview'}</span>
+                    <span>{playingAlbumId === currentAlbum.id ? 'Pause' : 'Play Preview'}</span>
                   )}
                   {playingAlbumId === currentAlbum.id && previewTrackTitle && (
                     <span className="truncate max-w-[130px] text-stone-700 font-normal text-[11px]">
-                      • {previewTrackTitle}
+                      · {previewTrackTitle}
                     </span>
                   )}
                 </span>
@@ -287,13 +280,13 @@ export default function HeadToHeadRanker({
             </div>
           </div>
 
-          <div className="w-full py-2.5 px-4 rounded-xl bg-stone-900 group-hover:bg-stone-800 text-stone-50 font-medium text-sm text-center transition-all shadow-xs">
-            Prefer {currentAlbum.title} 👍
+          <div className="w-full py-2 px-4 rounded-xl bg-stone-900 group-hover:bg-stone-800 text-stone-50 font-medium text-xs text-center transition-all shadow-xs">
+            Select
           </div>
         </button>
 
         {/* Center VS Badge */}
-        <div className="hidden md:flex absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-9 h-9 rounded-full bg-[#EAE4D9] border-2 border-white items-center justify-center font-bold text-xs text-stone-700 z-10 shadow-xs">
+        <div className="hidden md:flex absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-[#EAE4D9] border-2 border-white items-center justify-center font-bold text-[10px] text-stone-500 z-10 shadow-xs">
           VS
         </div>
 
@@ -309,23 +302,23 @@ export default function HeadToHeadRanker({
                 <img
                   src={opponent.coverImageUrl}
                   alt={opponent.title}
-                  className="w-20 h-20 rounded-xl object-cover shadow-sm border border-[#EAE4D9]"
+                  className="w-18 h-18 rounded-xl object-cover shadow-xs border border-[#EAE4D9]"
                 />
               ) : (
-                <div className="w-20 h-20 rounded-xl bg-[#EAE4D9] flex items-center justify-center text-stone-700 text-2xl font-bold">
+                <div className="w-18 h-18 rounded-xl bg-[#EAE4D9] flex items-center justify-center text-stone-700 text-2xl font-bold">
                   {opponent.title.charAt(0)}
                 </div>
               )}
               <div className="flex-1 min-w-0">
                 <div className="flex items-center space-x-2 mb-1">
-                  <span className="text-xs font-semibold text-stone-800 bg-[#EAE4D9] px-2 py-0.5 rounded">
-                    Rank #{opponent.rank}
+                  <span className="text-xs text-stone-500 font-mono">
+                    #{opponent.rank}
                   </span>
                   <span className="text-xs font-semibold text-stone-700">
                     ★ {opponent.rating.toFixed(1)}
                   </span>
                 </div>
-                <h4 className="text-lg font-bold text-stone-900 truncate group-hover:text-stone-700 transition-colors">
+                <h4 className="text-base font-semibold text-stone-900 truncate group-hover:text-stone-700 transition-colors">
                   {opponent.title}
                 </h4>
                 <p className="text-sm text-stone-500 truncate">
@@ -344,7 +337,7 @@ export default function HeadToHeadRanker({
                     artist: opponent.artist,
                   })
                 }
-                className={`relative overflow-hidden inline-flex items-center space-x-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
+                className={`relative overflow-hidden inline-flex items-center space-x-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all cursor-pointer ${
                   playingAlbumId === opponent.albumId
                     ? 'bg-[#EAE4D9] text-stone-900 border border-stone-400 shadow-xs'
                     : 'bg-[#FAF7F2] hover:bg-[#EAE4D9] text-stone-700 border border-[#D9D1C3]'
@@ -359,7 +352,7 @@ export default function HeadToHeadRanker({
                 )}
                 {/* Darker progress bar line along the bottom */}
                 {playingAlbumId === opponent.albumId && (
-                  <div className="absolute bottom-0 left-0 right-0 h-[2.5px] bg-stone-300/70 overflow-hidden pointer-events-none">
+                  <div className="absolute bottom-0 left-0 right-0 h-[2px] bg-stone-300/70 overflow-hidden pointer-events-none">
                     <div
                       className="h-full bg-stone-900 transition-[width] duration-150 ease-linear"
                       style={{ width: `${playbackProgress}%` }}
@@ -371,11 +364,11 @@ export default function HeadToHeadRanker({
                   {loadingPreviewId === opponent.albumId ? (
                     <span className="w-3 h-3 border-2 border-stone-600 border-t-transparent rounded-full animate-spin" />
                   ) : (
-                    <span>{playingAlbumId === opponent.albumId ? '⏸ Pause' : '▶ 30s Audio Preview'}</span>
+                    <span>{playingAlbumId === opponent.albumId ? 'Pause' : 'Play Preview'}</span>
                   )}
                   {playingAlbumId === opponent.albumId && previewTrackTitle && (
                     <span className="truncate max-w-[130px] text-stone-700 font-normal text-[11px]">
-                      • {previewTrackTitle}
+                      · {previewTrackTitle}
                     </span>
                   )}
                 </span>
@@ -383,28 +376,28 @@ export default function HeadToHeadRanker({
             </div>
           </div>
 
-          <div className="w-full py-2.5 px-4 rounded-xl bg-stone-900 group-hover:bg-stone-800 text-stone-50 font-medium text-sm text-center transition-all shadow-xs">
-            Prefer {opponent.title} 👍
+          <div className="w-full py-2 px-4 rounded-xl bg-stone-900 group-hover:bg-stone-800 text-stone-50 font-medium text-xs text-center transition-all shadow-xs">
+            Select
           </div>
         </button>
       </div>
 
       {/* Footer controls */}
-      <div className="mt-6 pt-4 border-t border-[#EAE4D9] flex items-center justify-between text-xs text-stone-500">
+      <div className="mt-6 pt-4 border-t border-[#EAE4D9] flex items-center justify-between text-xs text-stone-400">
         <button
           type="button"
           onClick={handleSkipOrEven}
-          className="hover:text-stone-900 transition-colors cursor-pointer"
+          className="hover:text-stone-700 transition-colors cursor-pointer"
         >
-          They are about equal (Tie)
+          Equal / Skip
         </button>
         {onCancel && (
           <button
             type="button"
             onClick={onCancel}
-            className="text-stone-500 hover:text-stone-800 transition-colors cursor-pointer"
+            className="hover:text-stone-700 transition-colors cursor-pointer"
           >
-            Switch to Manual Rating
+            Manual rating
           </button>
         )}
       </div>

@@ -184,9 +184,15 @@ export async function getAlbumDetailsFromMusicApi(
       (r) => r.wrapperType === 'track' && Boolean(r.trackName)
     )
 
+    const formatPreviewUrl = (raw?: string) => {
+      if (!raw) return undefined
+      if (raw.startsWith('/api/music/proxy-audio')) return raw
+      return `/api/music/proxy-audio?url=${encodeURIComponent(raw)}`
+    }
+
     const tracks: MusicApiTrack[] = tracksRaw.map((t) => ({
       name: t.trackName as string,
-      previewUrl: t.previewUrl,
+      previewUrl: formatPreviewUrl(t.previewUrl),
       trackTimeMillis: t.trackTimeMillis,
     }))
 
@@ -213,7 +219,8 @@ export async function getAlbumDetailsFromMusicApi(
       ? collection.artistName.split(/[,&]/).map((a) => a.trim()).filter(Boolean)
       : ['Unknown Artist']
 
-    const firstPreviewUrl = tracks.find((t) => Boolean(t.previewUrl))?.previewUrl
+    const rawFirstPreview = tracksRaw.find((t) => Boolean(t.previewUrl))?.previewUrl
+    const firstPreviewUrl = formatPreviewUrl(rawFirstPreview)
 
     return {
       collectionId,

@@ -59,45 +59,43 @@ export default function ReviewCard({ review, albumId }: ReviewCardProps) {
   const tier = getTierFromScore(review.rating)
 
   return (
-    <div className="bg-white border border-[#EAE4D9] rounded-2xl p-5 shadow-xs transition-all hover:border-stone-400">
+    <div className="bg-white border border-[#EAE4D9] rounded-xl p-4 transition-colors">
       <div className="flex items-start justify-between">
-        <div className="flex items-center space-x-3 flex-1">
+        <div className="flex items-center space-x-3 flex-1 min-w-0">
           {review.user.image ? (
             <img
               src={review.user.image}
               alt={review.user.name || 'User'}
-              className="h-11 w-11 rounded-full object-cover border border-[#EAE4D9]"
+              className="h-9 w-9 rounded-full object-cover border border-[#EAE4D9]"
             />
           ) : (
-            <div className="h-11 w-11 rounded-full bg-[#EAE4D9] text-stone-700 font-bold flex items-center justify-center border border-[#D9D1C3]">
+            <div className="h-9 w-9 rounded-full bg-[#EAE4D9] text-stone-700 font-medium text-xs flex items-center justify-center">
               {review.user.name?.charAt(0) || review.user.email.charAt(0).toUpperCase()}
             </div>
           )}
-          <div className="flex-1">
-            <div className="flex flex-wrap items-center gap-2">
-              <h4 className="font-bold text-stone-900 text-sm">
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center space-x-2">
+              <span className="font-medium text-stone-900 text-xs truncate">
                 {review.user.name || review.user.email.split('@')[0]}
-              </h4>
+              </span>
               {review.rank && (
-                <span className="text-xs font-semibold px-2 py-0.5 rounded-md bg-[#F3EDE2] text-stone-800 border border-[#E0D7C9]">
-                  Ranked #{review.rank}
+                <span className="text-[10px] text-stone-500 font-mono">
+                  #{review.rank}
                 </span>
               )}
-              <span className="text-stone-400 text-xs">• {formatDate(review.createdAt)}</span>
+              <span className="text-stone-400 text-[11px] font-mono">· {formatDate(review.createdAt)}</span>
             </div>
 
-            {/* Beli Score + Tier Badge */}
-            <div className="flex items-center space-x-2 mt-1">
-              <span className="text-xl font-black text-stone-900">{review.rating.toFixed(1)}</span>
-              <span className="text-xs text-stone-400">/ 10</span>
-              <span
-                className={`text-[11px] font-bold px-2 py-0.5 rounded-lg border ${tier.badgeBg} ${tier.borderColor} ${tier.textColor}`}
-              >
-                ★ {tier.label}
+            {/* Score + Tier */}
+            <div className="flex items-center space-x-1.5 mt-0.5">
+              <span className="text-sm font-semibold text-stone-900">{review.rating.toFixed(1)}</span>
+              <span className="text-[10px] text-stone-400 font-mono">/10</span>
+              <span className="text-[10px] text-stone-500 font-medium ml-1">
+                {tier.label}
               </span>
               {review.listenedWith && (
-                <span className="text-xs text-stone-500 hidden sm:inline">
-                  via {review.listenedWith}
+                <span className="text-[11px] text-stone-400">
+                  · {review.listenedWith}
                 </span>
               )}
             </div>
@@ -108,23 +106,22 @@ export default function ReviewCard({ review, albumId }: ReviewCardProps) {
           <button
             onClick={handleDelete}
             disabled={isDeleting}
-            className="text-stone-400 hover:text-rose-600 text-xs font-medium px-2 py-1 rounded-lg hover:bg-rose-50 transition-colors disabled:opacity-50 cursor-pointer"
+            className="text-stone-300 hover:text-stone-700 text-xs px-1 transition-colors disabled:opacity-50 cursor-pointer"
           >
-            {isDeleting ? 'Removing...' : 'Delete'}
+            {isDeleting ? '...' : '✕'}
           </button>
         )}
       </div>
 
       {/* Favorite Tracks & Skip Track */}
       {((review.favoriteTracks && review.favoriteTracks.length > 0) || review.skipTrack) && (
-        <div className="mt-3 pt-3 border-t border-[#F0EAE1] flex flex-wrap gap-2 text-xs">
+        <div className="mt-2.5 pt-2 border-t border-[#F0EAE1] flex flex-wrap gap-2 text-xs">
           {review.favoriteTracks && review.favoriteTracks.length > 0 && (
             <div className="flex items-center flex-wrap gap-1">
-              <span className="text-stone-400 font-semibold">Favorites:</span>
               {review.favoriteTracks.map((track, i) => (
                 <span
                   key={i}
-                  className="px-2 py-0.5 rounded-md bg-[#F4EFE6] text-stone-800 border border-[#E5DEC7] font-medium"
+                  className="text-[11px] text-stone-600 bg-[#FAF7F2] border border-[#EAE4D9] px-2 py-0.5 rounded-md"
                 >
                   ★ {track}
                 </span>
@@ -133,12 +130,9 @@ export default function ReviewCard({ review, albumId }: ReviewCardProps) {
           )}
 
           {review.skipTrack && (
-            <div className="flex items-center gap-1">
-              <span className="text-stone-400 font-semibold">Skip:</span>
-              <span className="px-2 py-0.5 rounded-md bg-stone-100 text-stone-600 font-medium">
-                {review.skipTrack}
-              </span>
-            </div>
+            <span className="text-[11px] text-stone-400 px-2 py-0.5">
+              Skip: {review.skipTrack}
+            </span>
           )}
         </div>
       )}
@@ -149,7 +143,7 @@ export default function ReviewCard({ review, albumId }: ReviewCardProps) {
           {review.vibes.map((vibe, i) => (
             <span
               key={i}
-              className="text-[10px] font-medium px-2 py-0.5 rounded-full bg-[#FAF7F2] text-stone-600 border border-[#EAE4D9]"
+              className="text-[10px] px-2 py-0.5 rounded-md bg-[#FAF7F2] text-stone-500 border border-[#EAE4D9]"
             >
               #{vibe}
             </span>
@@ -159,9 +153,9 @@ export default function ReviewCard({ review, albumId }: ReviewCardProps) {
 
       {/* Review Text */}
       {review.reviewText && (
-        <div className="mt-3 pt-2 text-sm text-stone-700 border-t border-[#F0EAE1] leading-relaxed">
+        <p className="mt-2.5 pt-2 text-xs text-stone-600 border-t border-[#F0EAE1] leading-relaxed">
           {review.reviewText}
-        </div>
+        </p>
       )}
     </div>
   )

@@ -29,16 +29,14 @@ interface ReviewListProps {
 export default function ReviewList({ reviews, albumId }: ReviewListProps) {
   if (reviews.length === 0) {
     return (
-      <div className="text-center py-12 bg-[#F5F1E9]/60 border border-[#E3DCCE] rounded-2xl">
-        <span className="text-3xl mb-2 block">🎵</span>
-        <p className="text-stone-700 font-medium">No reviews logged yet.</p>
-        <p className="text-stone-500 text-xs mt-1">Be the first to rate and rank this album!</p>
+      <div className="text-center py-10 bg-white border border-[#EAE4D9] rounded-xl">
+        <p className="text-stone-500 text-xs">No ratings yet.</p>
       </div>
     )
   }
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-3">
       {reviews.map((review) => (
         <ReviewCard key={review.id} review={review} albumId={albumId} />
       ))}

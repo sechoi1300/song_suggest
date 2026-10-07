@@ -159,18 +159,11 @@ export default function AlbumList({ albums }: AlbumListProps) {
 
   return (
     <div className="space-y-6">
-      {/* Controls: Search with Live Autocomplete, Genre Filters, Sort */}
-      <div className="bg-[#F5F1E9] border border-[#E3DCCE] rounded-2xl p-4 sm:p-5 shadow-xs space-y-4">
-        <div className="flex flex-col sm:flex-row gap-3 items-stretch sm:items-center justify-between">
+      {/* Search and Filters */}
+      <div className="space-y-3">
+        <div className="flex flex-col sm:flex-row gap-2.5 items-stretch sm:items-center justify-between">
           {/* Search bar with API autocomplete */}
           <div ref={searchContainerRef} className="relative flex-1">
-            <span className="absolute inset-y-0 left-3 flex items-center text-stone-400 pointer-events-none text-sm">
-              {isSearchingApi ? (
-                <span className="w-3.5 h-3.5 border-2 border-stone-700 border-t-transparent rounded-full animate-spin" />
-              ) : (
-                '🔍'
-              )}
-            </span>
             <input
               type="text"
               value={search}
@@ -178,9 +171,14 @@ export default function AlbumList({ albums }: AlbumListProps) {
               onFocus={() => {
                 if (apiSuggestions.length > 0) setIsDropdownOpen(true)
               }}
-              placeholder="Search or auto-complete any album in the world..."
-              className="w-full pl-9 pr-8 py-2.5 bg-white border border-[#D9D1C3] rounded-xl text-stone-900 text-sm focus:outline-none focus:ring-2 focus:ring-stone-400 placeholder-stone-400 shadow-xs"
+              placeholder="Search albums..."
+              className="w-full px-3.5 py-2 bg-white border border-[#D9D1C3] rounded-lg text-stone-900 text-xs focus:outline-none focus:ring-1 focus:ring-stone-400 placeholder-stone-400"
             />
+            {isSearchingApi && (
+              <span className="absolute inset-y-0 right-8 flex items-center pointer-events-none">
+                <span className="w-3 h-3 border-2 border-stone-600 border-t-transparent rounded-full animate-spin" />
+              </span>
+            )}
             {search && (
               <button
                 type="button"
@@ -189,63 +187,58 @@ export default function AlbumList({ albums }: AlbumListProps) {
                   setApiSuggestions([])
                   setIsDropdownOpen(false)
                 }}
-                className="absolute inset-y-0 right-3 flex items-center text-stone-400 hover:text-stone-700 text-xs cursor-pointer"
+                className="absolute inset-y-0 right-2.5 flex items-center text-stone-400 hover:text-stone-700 text-xs cursor-pointer"
               >
-                Clear
+                ✕
               </button>
             )}
 
             {/* Live Autocomplete Suggestions Dropdown */}
             {isDropdownOpen && apiSuggestions.length > 0 && (
-              <div className="absolute top-full left-0 right-0 mt-1.5 bg-white border border-[#EAE4D9] rounded-2xl shadow-xl overflow-hidden z-50 divide-y divide-[#F0EAE1] max-h-80 overflow-y-auto">
-                <div className="px-3.5 py-1.5 bg-[#FAF7F2] border-b border-[#EAE4D9] flex items-center justify-between text-[11px] font-medium text-stone-500">
-                  <span>Music Metadata Suggestions</span>
-                  <span className="text-[10px] text-stone-400">Click to view & rank</span>
-                </div>
-
+              <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-[#EAE4D9] rounded-xl shadow-lg overflow-hidden z-50 divide-y divide-[#F0EAE1] max-h-80 overflow-y-auto">
                 {apiSuggestions.map((item, idx) => (
                   <button
                     key={`${item.id}-${idx}`}
                     type="button"
                     onClick={() => handleSelectApiSuggestion(item)}
-                    className="w-full px-3.5 py-2.5 text-left flex items-center space-x-3 hover:bg-[#FAF7F2] transition-colors cursor-pointer"
+                    className="w-full px-3 py-2 text-left flex items-center space-x-2.5 hover:bg-[#FAF7F2] transition-colors cursor-pointer"
                   >
                     {item.coverImageUrl ? (
                       <img
                         src={item.coverImageUrl}
                         alt={item.title}
-                        className="w-10 h-10 rounded-lg object-cover shadow-2xs border border-[#EAE4D9] flex-shrink-0"
+                        className="w-8 h-8 rounded object-cover border border-[#EAE4D9] flex-shrink-0"
                       />
                     ) : (
-                      <div className="w-10 h-10 rounded-lg bg-[#EAE4D9] text-stone-700 flex items-center justify-center font-bold text-sm flex-shrink-0">
+                      <div className="w-8 h-8 rounded bg-[#EAE4D9] text-stone-700 flex items-center justify-center font-bold text-xs flex-shrink-0">
                         {item.title.charAt(0)}
                       </div>
                     )}
 
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center space-x-1.5">
-                        <span className="font-bold text-stone-900 text-xs sm:text-sm truncate">
+                        <span className="font-medium text-stone-900 text-xs truncate">
                           {item.title}
                         </span>
                         {item.releaseYear && (
-                          <span className="text-stone-400 text-xs font-mono">
+                          <span className="text-stone-400 text-[11px] font-mono">
                             ({item.releaseYear})
                           </span>
                         )}
                       </div>
-                      <p className="text-xs text-stone-500 truncate">
+                      <p className="text-[11px] text-stone-500 truncate">
                         {Array.isArray(item.artist) ? item.artist.join(', ') : item.artist}
                       </p>
                     </div>
 
                     <div className="flex-shrink-0">
                       {item.inCatalog ? (
-                        <span className="px-2 py-0.5 rounded-md bg-[#EAE4D9] text-stone-800 text-[10px] font-semibold border border-[#D9D1C3]">
-                          In Catalog
+                        <span className="text-[10px] text-stone-500 font-medium">
+                          Catalog
                         </span>
                       ) : (
-                        <span className="px-2 py-0.5 rounded-md bg-[#FAF7F2] text-stone-600 text-[10px] font-medium border border-[#EAE4D9]">
-                          🌐 Music API
+                        <span className="text-[10px] text-stone-400 font-medium">
+                          Online
                         </span>
                       )}
                     </div>
@@ -257,25 +250,24 @@ export default function AlbumList({ albums }: AlbumListProps) {
 
           {/* Sort Dropdown */}
           <div className="flex items-center space-x-2 flex-shrink-0">
-            <span className="text-xs text-stone-500 font-medium whitespace-nowrap">Sort by:</span>
             <select
               value={sortBy}
               onChange={(e) =>
                 setSortBy(e.target.value as 'rating' | 'newest' | 'reviews' | 'title')
               }
-              className="px-3 py-2 bg-white border border-[#D9D1C3] rounded-xl text-xs font-medium text-stone-800 focus:outline-none focus:ring-2 focus:ring-stone-400 cursor-pointer shadow-xs"
+              className="px-2.5 py-2 bg-white border border-[#D9D1C3] rounded-lg text-xs text-stone-700 focus:outline-none focus:ring-1 focus:ring-stone-400 cursor-pointer"
             >
-              <option value="rating">Top Rated ★</option>
-              <option value="reviews">Most Reviewed 💬</option>
-              <option value="newest">Release Date 📅</option>
-              <option value="title">Title (A-Z) 🔤</option>
+              <option value="rating">Top Rated</option>
+              <option value="reviews">Most Reviews</option>
+              <option value="newest">Release Date</option>
+              <option value="title">Title (A-Z)</option>
             </select>
           </div>
         </div>
 
         {/* Genre Pill Carousel */}
         {allGenres.length > 1 && (
-          <div className="flex items-center space-x-2 overflow-x-auto pb-1 scrollbar-none">
+          <div className="flex items-center space-x-1.5 overflow-x-auto pb-1 scrollbar-none text-xs">
             {allGenres.map((genre) => {
               const isSelected = selectedGenre === genre
               return (
@@ -283,13 +275,13 @@ export default function AlbumList({ albums }: AlbumListProps) {
                   key={genre}
                   type="button"
                   onClick={() => setSelectedGenre(genre)}
-                  className={`px-3 py-1 rounded-lg text-xs font-medium whitespace-nowrap transition-all cursor-pointer border ${
+                  className={`px-2.5 py-1 rounded-md text-xs transition-colors cursor-pointer border ${
                     isSelected
-                      ? 'bg-stone-900 text-stone-50 border-stone-900 shadow-xs'
-                      : 'bg-white text-stone-600 border-[#DDD5C7] hover:border-stone-400 hover:text-stone-900'
+                      ? 'bg-stone-900 text-stone-50 border-stone-900 font-medium'
+                      : 'bg-white text-stone-600 border-[#DDD5C7] hover:border-stone-400'
                   }`}
                 >
-                  {genre === 'ALL' ? 'All Genres' : genre}
+                  {genre === 'ALL' ? 'All' : genre}
                 </button>
               )
             })}
@@ -298,46 +290,37 @@ export default function AlbumList({ albums }: AlbumListProps) {
       </div>
 
       {isNavigating && (
-        <div className="bg-[#FAF7F2] border border-[#EAE4D9] rounded-2xl p-4 text-center text-xs text-stone-700 shadow-xs animate-pulse">
-          Loading album from Music Metadata API...
+        <div className="text-center text-xs text-stone-500 py-3 animate-pulse">
+          Loading album...
         </div>
       )}
 
       {/* Album Grid */}
       {filteredAlbums.length === 0 ? (
-        <div className="text-center py-16 bg-[#F5F1E9]/60 border border-[#E3DCCE] rounded-3xl p-8 space-y-4">
-          <span className="text-4xl block">💿</span>
-          <div>
-            <p className="text-stone-800 font-bold text-lg">
-              No albums in catalog match &ldquo;{search}&rdquo;
-            </p>
-            <p className="text-stone-500 text-xs mt-1">
-              Select one of the live Music Metadata suggestions in the search bar above to automatically add it to your catalog!
-            </p>
-          </div>
-
+        <div className="text-center py-16 bg-white border border-[#EAE4D9] rounded-2xl p-6">
+          <p className="text-stone-700 text-sm font-medium">No albums found</p>
           {apiSuggestions.length > 0 && (
-            <div className="pt-4 max-w-xl mx-auto space-y-2 text-left">
-              <span className="text-xs font-semibold uppercase tracking-wider text-stone-500">
-                Suggested from Free Music API:
+            <div className="pt-4 max-w-md mx-auto space-y-1.5 text-left">
+              <span className="text-[11px] text-stone-400 uppercase tracking-wider font-mono">
+                Suggestions from Music API
               </span>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+              <div className="divide-y divide-[#F0EAE1] bg-[#FAF7F2] rounded-xl border border-[#EAE4D9]">
                 {apiSuggestions.slice(0, 4).map((item) => (
                   <button
                     key={item.id}
                     type="button"
                     onClick={() => handleSelectApiSuggestion(item)}
-                    className="p-3 bg-white border border-[#EAE4D9] hover:border-stone-400 rounded-xl flex items-center space-x-3 transition-colors text-left cursor-pointer shadow-xs"
+                    className="w-full p-2.5 flex items-center space-x-2.5 text-left hover:bg-[#F3EDE2] transition-colors cursor-pointer"
                   >
                     {item.coverImageUrl && (
                       <img
                         src={item.coverImageUrl}
                         alt={item.title}
-                        className="w-10 h-10 rounded-md object-cover border border-[#EAE4D9]"
+                        className="w-8 h-8 rounded object-cover border border-[#EAE4D9]"
                       />
                     )}
                     <div className="min-w-0 flex-1">
-                      <p className="font-bold text-stone-900 text-xs truncate">{item.title}</p>
+                      <p className="font-medium text-stone-900 text-xs truncate">{item.title}</p>
                       <p className="text-[11px] text-stone-500 truncate">
                         {Array.isArray(item.artist) ? item.artist.join(', ') : item.artist}
                       </p>

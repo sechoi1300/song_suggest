@@ -35,15 +35,14 @@ export default function WantToListenList({ initialItems }: WantToListenListProps
 
   if (items.length === 0) {
     return (
-      <div className="text-center py-16 bg-white border border-[#EAE4D9] rounded-3xl p-8 shadow-xs">
-        <span className="text-5xl mb-3 block">🔖</span>
-        <h3 className="text-xl font-bold text-stone-900 mb-2">Your queue is empty</h3>
-        <p className="text-stone-600 text-sm max-w-md mx-auto mb-6">
-          Bookmark albums you want to listen to later. When you&apos;re ready, rank them to add them to your personal Beli leaderboard!
+      <div className="text-center py-16 bg-white border border-[#EAE4D9] rounded-2xl p-8">
+        <p className="text-stone-900 font-medium text-sm">Your queue is empty</p>
+        <p className="text-stone-500 text-xs mt-1 mb-5">
+          Save albums to listen to later.
         </p>
         <Link
           href="/"
-          className="inline-flex items-center px-6 py-2.5 rounded-xl bg-stone-900 hover:bg-stone-800 text-stone-50 font-medium text-sm shadow-xs transition-colors cursor-pointer"
+          className="inline-flex items-center px-4 py-2 rounded-lg bg-stone-900 hover:bg-stone-800 text-stone-50 text-xs font-medium transition-colors"
         >
           Browse Albums
         </Link>
@@ -52,12 +51,12 @@ export default function WantToListenList({ initialItems }: WantToListenListProps
   }
 
   return (
-    <div className="space-y-4">
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+    <div className="space-y-3">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
         {items.map((item) => (
           <div
             key={item.id}
-            className="group bg-white border border-[#EAE4D9] hover:border-stone-400 rounded-2xl p-4 transition-all flex items-center justify-between gap-4 shadow-xs"
+            className="group bg-white border border-[#EAE4D9] hover:border-stone-400 rounded-xl p-3 transition-colors flex items-center justify-between gap-3"
           >
             <div className="flex items-center space-x-3 min-w-0">
               <Link href={`/albums/${item.album.id}`} className="flex-shrink-0">
@@ -65,10 +64,10 @@ export default function WantToListenList({ initialItems }: WantToListenListProps
                   <img
                     src={item.album.coverImageUrl}
                     alt={item.album.title}
-                    className="w-16 h-16 rounded-xl object-cover shadow-xs border border-[#EAE4D9] group-hover:scale-105 transition-transform"
+                    className="w-12 h-12 rounded-lg object-cover border border-[#EAE4D9]"
                   />
                 ) : (
-                  <div className="w-16 h-16 rounded-xl bg-[#EAE4D9] text-stone-700 flex items-center justify-center text-xl font-bold">
+                  <div className="w-12 h-12 rounded-lg bg-[#EAE4D9] text-stone-700 flex items-center justify-center text-sm font-medium">
                     {item.album.title.charAt(0)}
                   </div>
                 )}
@@ -76,37 +75,30 @@ export default function WantToListenList({ initialItems }: WantToListenListProps
               <div className="min-w-0">
                 <Link
                   href={`/albums/${item.album.id}`}
-                  className="font-bold text-stone-900 hover:text-stone-700 transition-colors block truncate text-sm"
+                  className="font-medium text-stone-900 hover:text-stone-600 transition-colors block truncate text-xs"
                 >
                   {item.album.title}
                 </Link>
-                <p className="text-xs text-stone-500 truncate">
+                <p className="text-[11px] text-stone-500 truncate">
                   {Array.isArray(item.album.artist)
                     ? item.album.artist.join(', ')
                     : item.album.artist}
                 </p>
-                {item.album.genres && item.album.genres.length > 0 && (
-                  <div className="flex gap-1 mt-1">
-                    <span className="text-[10px] px-2 py-0.5 rounded-md bg-[#FAF7F2] text-stone-600 border border-[#EAE4D9]">
-                      {item.album.genres[0]}
-                    </span>
-                  </div>
-                )}
               </div>
             </div>
 
             <div className="flex items-center space-x-2 flex-shrink-0">
               <Link
                 href={`/albums/${item.album.id}`}
-                className="px-3 py-1.5 rounded-xl bg-stone-900 hover:bg-stone-800 text-stone-50 text-xs font-medium transition-colors shadow-xs cursor-pointer"
+                className="px-2.5 py-1 rounded-md bg-stone-900 hover:bg-stone-800 text-stone-50 text-xs font-medium transition-colors cursor-pointer"
               >
-                Rate & Rank 🎧
+                Rate
               </Link>
               <button
                 type="button"
                 onClick={() => handleRemove(item.albumId)}
-                title="Remove from queue"
-                className="text-stone-400 hover:text-rose-600 p-1.5 text-xs transition-colors cursor-pointer"
+                title="Remove"
+                className="text-stone-300 hover:text-stone-700 p-1 text-xs transition-colors cursor-pointer"
               >
                 ✕
               </button>

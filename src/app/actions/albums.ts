@@ -185,7 +185,7 @@ export async function importOrGetAlbumFromApi(collectionIdOrId: number | string)
       },
     })
     revalidatePath('/')
-    return { success: true, album: created }
+    return { success: true, album: { ...created, tracks: details.tracks } }
   } catch (dbError) {
     console.warn('Could not persist album to DB, serving in-memory representation:', dbError)
     const memoryAlbum = {
@@ -199,6 +199,7 @@ export async function importOrGetAlbumFromApi(collectionIdOrId: number | string)
       genres: details.genres,
       coverImageUrl: details.coverImageUrl,
       tracklist: details.tracklist || [],
+      tracks: details.tracks || [],
       createdAt: new Date(),
       updatedAt: new Date(),
       spotifyUrl: null,
@@ -242,11 +243,12 @@ export async function getAlbums(options?: AlbumFilterOptions) {
         artist: item.artist,
         releaseDate: new Date(item.releaseDate),
         releaseYear: item.releaseYear,
-        length: '45:00',
+        length: item.length || '45:00',
         numSongs: item.numSongs || 12,
         genres: item.genres,
         coverImageUrl: item.coverImageUrl,
-        tracklist: [],
+        tracklist: item.tracklist || [],
+        tracks: item.tracks || [],
         averageRating: communityScores[idx % communityScores.length],
         reviewCount: reviewCounts[idx % reviewCounts.length],
       }))
@@ -337,6 +339,9 @@ export async function getAlbumById(id: string) {
     console.warn('Prisma getAlbumById failed, searching fallback catalog:', error)
   }
 
+  // Check sample catalog
+  const sample = SAMPLE_ALBUMS.find((a) => a.id === id)
+
   // If album is an iTunes collection ID, resolve it from the music API
   if (id.startsWith('itunes-')) {
     try {
@@ -344,8 +349,8 @@ export async function getAlbumById(id: string) {
       if (res.success && res.album) {
         return {
           ...res.album,
-          averageRating: undefined,
-          reviewCount: 0,
+          averageRating: sample?.averageRating ?? undefined,
+          reviewCount: sample?.reviewCount ?? 0,
           reviews: [],
         }
       }
@@ -354,8 +359,6 @@ export async function getAlbumById(id: string) {
     }
   }
 
-  // Fallback to sample catalog
-  const sample = SAMPLE_ALBUMS.find((a) => a.id === id)
   if (!sample) return null
 
   return {

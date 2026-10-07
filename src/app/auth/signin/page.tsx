@@ -34,89 +34,75 @@ export default function SignInPage() {
   return (
     <div className="min-h-screen bg-[#FAF7F2] text-stone-900">
       <Navbar />
-      <main className="max-w-md mx-auto px-4 sm:px-6 lg:px-8 py-16">
-        <div className="bg-white border border-[#EAE4D9] rounded-3xl shadow-xs p-8">
-          <div className="text-center mb-8">
-            <div className="inline-flex items-center justify-center w-12 h-12 rounded-2xl bg-stone-900 text-stone-100 shadow-xs mb-3 text-xl">
-              🎵
-            </div>
-            <h1 className="text-2xl font-black tracking-tight text-stone-900">
-              Welcome to Song Suggest
+      <main className="max-w-sm mx-auto px-4 sm:px-6 py-16">
+        <div className="bg-white border border-[#EAE4D9] rounded-2xl p-6 sm:p-7">
+          <div className="text-center mb-6">
+            <h1 className="text-xl font-semibold text-stone-900">
+              Sign In
             </h1>
-            <p className="text-xs text-stone-500 mt-1.5">
-              The Beli experience for rating, ranking, and discovering albums.
+            <p className="text-xs text-stone-500 mt-1">
+              Access your personal leaderboard and ratings.
             </p>
           </div>
 
           {/* Quick Demo Sign In */}
-          <div className="space-y-2.5 mb-6">
-            <p className="text-[10px] font-semibold uppercase tracking-wider text-stone-400 text-center">
-              Quick Sign In (One-Click)
-            </p>
+          <div className="space-y-2 mb-5">
             <button
               type="button"
               onClick={() => handleDemoSignIn('alex@songsuggest.app', 'Alex Morgan')}
               disabled={isLoading}
-              className="w-full flex items-center justify-between px-4 py-3 bg-stone-900 hover:bg-stone-800 text-stone-50 rounded-xl shadow-xs transition-colors disabled:opacity-60 cursor-pointer"
+              className="w-full flex items-center justify-between px-3.5 py-2.5 bg-stone-900 hover:bg-stone-800 text-stone-50 rounded-lg transition-colors disabled:opacity-60 cursor-pointer text-xs"
             >
-              <div className="flex items-center space-x-3">
-                <span className="w-8 h-8 rounded-full bg-stone-800 text-stone-100 flex items-center justify-center font-bold text-xs">
+              <div className="flex items-center space-x-2.5">
+                <span className="w-6 h-6 rounded-full bg-stone-700 text-stone-100 flex items-center justify-center font-medium text-[10px]">
                   AM
                 </span>
-                <div className="text-left">
-                  <div className="text-sm font-semibold">Sign in as Alex Morgan</div>
-                  <div className="text-xs text-stone-400">Taste Profile: Hip-Hop & Indie</div>
-                </div>
+                <span className="font-medium">Alex Morgan</span>
               </div>
-              <span className="text-[10px] bg-stone-800 text-stone-300 px-2 py-0.5 rounded font-mono">1-Click</span>
+              <span className="text-[10px] text-stone-400">Demo</span>
             </button>
 
             <button
               type="button"
               onClick={() => handleDemoSignIn('jordan@songsuggest.app', 'Jordan Lee')}
               disabled={isLoading}
-              className="w-full flex items-center justify-between px-4 py-3 bg-[#F5F1E9] hover:bg-[#EAE4D9] border border-[#EAE4D9] text-stone-900 rounded-xl transition-colors disabled:opacity-60 cursor-pointer"
+              className="w-full flex items-center justify-between px-3.5 py-2.5 bg-[#FAF7F2] hover:bg-[#F3EDE2] border border-[#EAE4D9] text-stone-900 rounded-lg transition-colors disabled:opacity-60 cursor-pointer text-xs"
             >
-              <div className="flex items-center space-x-3">
-                <span className="w-8 h-8 rounded-full bg-[#EAE4D9] text-stone-800 flex items-center justify-center font-bold text-xs">
+              <div className="flex items-center space-x-2.5">
+                <span className="w-6 h-6 rounded-full bg-[#EAE4D9] text-stone-800 flex items-center justify-center font-medium text-[10px]">
                   JL
                 </span>
-                <div className="text-left">
-                  <div className="text-sm font-semibold">Sign in as Jordan Lee</div>
-                  <div className="text-xs text-stone-500">Taste Profile: Electronic & R&B</div>
-                </div>
+                <span className="font-medium">Jordan Lee</span>
               </div>
-              <span className="text-[10px] bg-[#EAE4D9] text-stone-700 px-2 py-0.5 rounded font-mono">
-                1-Click
-              </span>
+              <span className="text-[10px] text-stone-500">Demo</span>
             </button>
           </div>
 
-          <div className="relative mb-6">
+          <div className="relative mb-5">
             <div className="absolute inset-0 flex items-center">
-              <div className="w-full border-t border-stone-200"></div>
+              <div className="w-full border-t border-[#EAE4D9]"></div>
             </div>
-            <div className="relative flex justify-center text-[10px] uppercase">
-              <span className="px-2 bg-white text-stone-400">Or use your name</span>
+            <div className="relative flex justify-center text-[11px]">
+              <span className="px-2 bg-white text-stone-400">or enter details</span>
             </div>
           </div>
 
-          <form onSubmit={handleCustomCredentialsSignIn} className="space-y-3 mb-6">
+          <form onSubmit={handleCustomCredentialsSignIn} className="space-y-3 mb-5">
             <div>
-              <label htmlFor="name" className="block text-xs font-medium text-stone-600 mb-1">
-                Your Name
+              <label htmlFor="name" className="block text-[11px] font-medium text-stone-600 mb-1">
+                Name
               </label>
               <input
                 type="text"
                 id="name"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
-                placeholder="e.g. Sam Taylor"
-                className="w-full px-3 py-2 bg-[#FAF7F2] border border-[#EAE4D9] rounded-xl text-stone-900 text-sm focus:outline-none focus:ring-2 focus:ring-stone-400 placeholder-stone-400"
+                placeholder="Name"
+                className="w-full px-3 py-1.5 bg-white border border-[#D9D1C3] rounded-lg text-stone-900 text-xs focus:outline-none focus:ring-1 focus:ring-stone-400 placeholder-stone-400"
               />
             </div>
             <div>
-              <label htmlFor="email" className="block text-xs font-medium text-stone-600 mb-1">
+              <label htmlFor="email" className="block text-[11px] font-medium text-stone-600 mb-1">
                 Email
               </label>
               <input
@@ -125,25 +111,25 @@ export default function SignInPage() {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
-                placeholder="you@example.com"
-                className="w-full px-3 py-2 bg-[#FAF7F2] border border-[#EAE4D9] rounded-xl text-stone-900 text-sm focus:outline-none focus:ring-2 focus:ring-stone-400 placeholder-stone-400"
+                placeholder="Email address"
+                className="w-full px-3 py-1.5 bg-white border border-[#D9D1C3] rounded-lg text-stone-900 text-xs focus:outline-none focus:ring-1 focus:ring-stone-400 placeholder-stone-400"
               />
             </div>
             <button
               type="submit"
               disabled={isLoading}
-              className="w-full bg-stone-900 hover:bg-stone-800 text-stone-50 font-medium py-2.5 px-4 rounded-xl text-sm transition-colors disabled:opacity-50 cursor-pointer shadow-xs"
+              className="w-full bg-stone-900 hover:bg-stone-800 text-stone-50 font-medium py-2 px-3 rounded-lg text-xs transition-colors disabled:opacity-50 cursor-pointer"
             >
-              {isLoading ? 'Entering...' : 'Enter App'}
+              {isLoading ? 'Signing in...' : 'Sign In'}
             </button>
           </form>
 
           <div className="relative mb-4">
             <div className="absolute inset-0 flex items-center">
-              <div className="w-full border-t border-stone-200"></div>
+              <div className="w-full border-t border-[#EAE4D9]"></div>
             </div>
-            <div className="relative flex justify-center text-[10px] uppercase">
-              <span className="px-2 bg-white text-stone-400">OAuth Providers</span>
+            <div className="relative flex justify-center text-[11px]">
+              <span className="px-2 bg-white text-stone-400">OAuth</span>
             </div>
           </div>
 
