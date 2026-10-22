@@ -2,6 +2,20 @@ import assert from 'node:assert/strict'
 import { test } from 'node:test'
 import { getOAuthProviders } from '../src/lib/oauthProviders'
 import { getSignInErrorMessage } from '../src/lib/signInErrors'
+import CredentialsProvider from 'next-auth/providers/credentials'
+import { getSignInProviderIds } from '../src/lib/signInProviders'
+
+test('name-and-email sign-in uses the configured credentials ID rather than the provider default', () => {
+  const credentials = CredentialsProvider({
+    id: 'demo-login',
+    credentials: { email: { type: 'email' }, name: { type: 'text' } },
+    authorize: async () => null,
+  })
+  const google = getOAuthProviders({ NODE_ENV: 'test', GOOGLE_CLIENT_ID: 'google-id', GOOGLE_CLIENT_SECRET: 'google-secret' })
+  assert.deepEqual(getSignInProviderIds([credentials]), ['demo-login'])
+  assert.deepEqual(getSignInProviderIds([credentials, ...google]), ['demo-login', 'google'])
+  assert.ok(!getSignInProviderIds([credentials]).includes('credentials'))
+})
 
 test('unconfigured and partially configured Google sign-in cannot be offered', () => {
   const base = { NODE_ENV: 'test' } as const
