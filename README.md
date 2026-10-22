@@ -12,7 +12,7 @@ Prisma 7's `pg` adapter.
 - Track previews with playback progress and visible error messages.
 - Personal scores, head-to-head ranking, favorite tracks, and review notes.
 - A saved listening queue, taste-based suggestions, and profile statistics.
-- Development demo sign-in and optional Google/GitHub OAuth.
+- Development demo sign-in and optional Google OAuth.
 
 The chart is based on iTunes sales. Community scores come from this app's reviews.
 Music preview availability depends on Apple's catalog.

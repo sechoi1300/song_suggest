@@ -93,13 +93,13 @@ album to the queue, rate it, and check `/profile`. Reload the page to confirm pe
 You can inspect the rows in Supabase's Table Editor or run `npm run db:studio`.
 
 The demo sign-in accepts an email without proving ownership. Use it for development;
-configure the existing Google/GitHub OAuth providers and restrict demo sign-in before
+configure Google OAuth and restrict demo sign-in before
 opening the app to real users.
 
-## Enable Google and GitHub sign-in
+## Enable Google sign-in
 
-The sign-in page enables a provider only when both its client ID and secret are set.
-Configure either provider or both in your existing `.env.local`. Keep the existing
+The sign-in page enables Google only when both its client ID and secret are set.
+Configure it in your existing `.env.local`. Keep the existing
 `AUTH_SECRET` and database settings. Restart `npm run dev` after editing the file.
 
 ### Google
@@ -116,28 +116,14 @@ Configure either provider or both in your existing `.env.local`. Keep the existi
 See [Google's OAuth setup](https://developers.google.com/identity/protocols/oauth2/web-server)
 and [NextAuth's Google provider](https://next-auth.js.org/providers/google).
 
-### GitHub
-
-1. Open [GitHub OAuth Apps](https://github.com/settings/developers) and register a
-   **New OAuth App**.
-2. Set Homepage URL to `http://localhost:3000` and Authorization callback URL to
-   `http://localhost:3000/api/auth/callback/github`.
-3. Generate a client secret and save the client ID as `GITHUB_ID` and the secret as
-   `GITHUB_SECRET` in `.env.local`.
-
-See [GitHub's registration guide](https://docs.github.com/en/apps/oauth-apps/building-oauth-apps/creating-an-oauth-app)
-and [NextAuth's GitHub provider](https://next-auth.js.org/providers/github).
-
 ```dotenv
 GOOGLE_CLIENT_ID="your-google-client-id"
 GOOGLE_CLIENT_SECRET="your-google-client-secret"
-GITHUB_ID="your-github-oauth-client-id"
-GITHUB_SECRET="your-github-oauth-client-secret"
 ```
 
 These are private server settings. Enter them locally rather than sharing them in
-chat. After restarting, `/api/auth/providers` should list the configured providers,
-and the corresponding buttons will be enabled. Test using Chrome or Edge. In
+chat. After restarting, `/api/auth/providers` should list Google,
+and its sign-in button will be enabled. Test using Chrome or Edge. In
 production, register callbacks using your HTTPS domain and update `NEXTAUTH_URL`.
 
 The Node server commands enable system CA trust for OAuth discovery and token

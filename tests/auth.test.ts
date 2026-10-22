@@ -3,22 +3,17 @@ import { test } from 'node:test'
 import { getOAuthProviders } from '../src/lib/oauthProviders'
 import { getSignInErrorMessage } from '../src/lib/signInErrors'
 
-test('unconfigured and partially configured OAuth providers cannot be offered for sign-in', () => {
+test('unconfigured and partially configured Google sign-in cannot be offered', () => {
   const base = { NODE_ENV: 'test' } as const
   assert.deepEqual(getOAuthProviders(base), [])
   assert.deepEqual(getOAuthProviders({ ...base, GOOGLE_CLIENT_ID: 'google-id' }), [])
   assert.deepEqual(getOAuthProviders({ ...base, GOOGLE_CLIENT_SECRET: 'google-secret' }), [])
-  assert.deepEqual(getOAuthProviders({ ...base, GITHUB_ID: 'github-id' }), [])
-  assert.deepEqual(getOAuthProviders({ ...base, GITHUB_SECRET: 'github-secret' }), [])
   assert.deepEqual(getOAuthProviders({ ...base, GOOGLE_CLIENT_ID: 'google-id', GOOGLE_CLIENT_SECRET: '   ' }), [])
 })
 
-test('each provider becomes available independently once its credentials are complete', () => {
+test('Google sign-in becomes available once both credentials are complete', () => {
   const google = { NODE_ENV: 'test', GOOGLE_CLIENT_ID: 'google-id', GOOGLE_CLIENT_SECRET: 'google-secret' } as const
-  const github = { NODE_ENV: 'test', GITHUB_ID: 'github-id', GITHUB_SECRET: 'github-secret' } as const
   assert.deepEqual(getOAuthProviders(google).map((provider) => provider.id), ['google'])
-  assert.deepEqual(getOAuthProviders(github).map((provider) => provider.id), ['github'])
-  assert.deepEqual(getOAuthProviders({ ...google, ...github }).map((provider) => provider.id), ['google', 'github'])
 })
 
 test('sign-in failures show recovery instructions without reflecting provider details', () => {
