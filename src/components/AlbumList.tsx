@@ -16,6 +16,7 @@ interface AlbumItem {
   coverImageUrl?: string | null
   averageRating?: number
   reviewCount?: number
+  chartRank?: number
 }
 
 interface AlbumListProps {
@@ -26,7 +27,7 @@ export default function AlbumList({ albums }: AlbumListProps) {
   const router = useRouter()
   const [search, setSearch] = useState('')
   const [selectedGenre, setSelectedGenre] = useState('ALL')
-  const [sortBy, setSortBy] = useState<'rating' | 'newest' | 'reviews' | 'title'>('rating')
+  const [sortBy, setSortBy] = useState<'chart' | 'rating' | 'newest' | 'reviews' | 'title'>('chart')
 
   // Live autocomplete state from Music Metadata API
   const [apiSuggestions, setApiSuggestions] = useState<AutocompleteAlbumItem[]>([])
@@ -118,6 +119,9 @@ export default function AlbumList({ albums }: AlbumListProps) {
     }
 
     switch (sortBy) {
+      case 'chart':
+        result.sort((a, b) => (a.chartRank ?? Infinity) - (b.chartRank ?? Infinity))
+        break
       case 'rating':
         result.sort((a, b) => (b.averageRating ?? 0) - (a.averageRating ?? 0))
         break
@@ -253,10 +257,11 @@ export default function AlbumList({ albums }: AlbumListProps) {
             <select
               value={sortBy}
               onChange={(e) =>
-                setSortBy(e.target.value as 'rating' | 'newest' | 'reviews' | 'title')
+                setSortBy(e.target.value as 'chart' | 'rating' | 'newest' | 'reviews' | 'title')
               }
               className="px-2.5 py-2 bg-white border border-[#D9D1C3] rounded-lg text-xs text-stone-700 focus:outline-none focus:ring-1 focus:ring-stone-400 cursor-pointer"
             >
+              <option value="chart">Chart Order</option>
               <option value="rating">Top Rated</option>
               <option value="reviews">Most Reviews</option>
               <option value="newest">Release Date</option>

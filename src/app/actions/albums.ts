@@ -6,7 +6,7 @@ import { SAMPLE_ALBUMS } from '@/lib/sampleAlbums'
 import {
   searchAlbumsFromMusicApi,
   getAlbumDetailsFromMusicApi,
-  getFeaturedAlbumsFromApi,
+  getTopAlbumsChart,
 } from '@/lib/musicApi'
 
 export interface AlbumFilterOptions {
@@ -210,57 +210,32 @@ export async function importOrGetAlbumFromApi(collectionIdOrId: number | string)
 }
 
 export async function getAlbums(options?: AlbumFilterOptions) {
+  const feed = await getTrendingAlbumFeed()
+  return applyFiltersToAlbums(feed.albums, options)
+}
+
+export async function getTrendingAlbumFeed() {
+  const chart = await getTopAlbumsChart()
+  let savedAlbums: Array<{ id: string; averageRating: number | null; reviewCount: number }> = []
   try {
-    const albums = await prisma.album.findMany({
-      orderBy: {
-        createdAt: 'desc',
-      },
+    savedAlbums = await prisma.album.findMany({
+      where: { id: { in: chart.albums.map((album) => album.id) } },
+      select: { id: true, averageRating: true, reviewCount: true },
     })
-
-    if (albums.length > 0) {
-      const formatted = albums.map((album) => ({
-        ...album,
-        averageRating: album.averageRating ?? undefined,
-        reviewCount: album.reviewCount ?? 0,
-      }))
-
-      return applyFiltersToAlbums(formatted, options)
-    }
   } catch (error) {
-    console.warn('Database offline or unreachable, querying live music API:', error)
+    console.warn('Could not load community ratings for chart albums:', error)
   }
-
-  // Pull live featured albums dynamically from the Music API!
-  try {
-    const liveApiAlbums = await getFeaturedAlbumsFromApi()
-    if (liveApiAlbums.length > 0) {
-      const communityScores = [9.8, 9.6, 9.5, 9.4, 9.3, 9.2, 9.1, 9.0, 8.9, 8.8, 8.7, 8.6]
-      const reviewCounts = [64, 52, 48, 41, 39, 36, 32, 28, 26, 24, 20, 18]
-
-      const formatted = liveApiAlbums.map((item, idx) => ({
-        id: item.id,
-        title: item.title,
-        artist: item.artist,
-        releaseDate: new Date(item.releaseDate),
-        releaseYear: item.releaseYear,
-        length: item.length || '45:00',
-        numSongs: item.numSongs || 12,
-        genres: item.genres,
-        coverImageUrl: item.coverImageUrl,
-        tracklist: item.tracklist || [],
-        tracks: item.tracks || [],
-        averageRating: communityScores[idx % communityScores.length],
-        reviewCount: reviewCounts[idx % reviewCounts.length],
-      }))
-
-      return applyFiltersToAlbums(formatted, options)
-    }
-  } catch (apiErr) {
-    console.warn('Error fetching live featured albums from API:', apiErr)
+  const ratings = new Map(savedAlbums.map((album) => [album.id, album]))
+  return {
+    updatedAt: chart.updatedAt,
+    isStale: chart.isStale,
+    albums: chart.albums.map((album) => ({
+      ...album,
+      releaseDate: new Date(album.releaseDate),
+      averageRating: ratings.get(album.id)?.averageRating ?? undefined,
+      reviewCount: ratings.get(album.id)?.reviewCount ?? 0,
+    })),
   }
-
-  // Authentic fallback catalog (real Apple Music metadata)
-  return applyFiltersToAlbums(SAMPLE_ALBUMS, options)
 }
 
 function applyFiltersToAlbums<T extends { title: string; artist: string[]; genres: string[]; averageRating?: number; releaseDate: Date; reviewCount?: number }>(

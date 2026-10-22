@@ -3,7 +3,7 @@
 import { prisma } from '@/lib/prisma'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
-import { SAMPLE_ALBUMS } from '@/lib/sampleAlbums'
+import { getAlbums } from './albums'
 
 export interface SuggestionCriteria {
   mood?: string
@@ -109,19 +109,16 @@ export async function getAlbumSuggestions(
       })) as unknown as SuggestedAlbum[]
     } catch {}
 
-    // Fallback to sample catalog if database returns no candidates
-    if (candidates.length === 0) {
-      let sampleCandidates = SAMPLE_ALBUMS.filter((a) => !userRatedAlbumIds.has(a.id))
-      if (criteria?.onlyFromQueue) {
-        sampleCandidates = sampleCandidates.filter((a) => queueAlbumIds.has(a.id))
-      }
+    // Include current chart discoveries while retaining saved catalog recommendations.
+    if (!criteria?.onlyFromQueue) {
+      let chartCandidates = (await getAlbums()).filter((a) => !userRatedAlbumIds.has(a.id))
       if (criteria?.genre && criteria.genre !== 'ALL') {
         const g = criteria.genre.toLowerCase()
-        sampleCandidates = sampleCandidates.filter((a) =>
+        chartCandidates = chartCandidates.filter((a) =>
           a.genres.some((ag: string) => ag.toLowerCase() === g)
         )
       }
-      candidates = sampleCandidates.length > 0 ? sampleCandidates : SAMPLE_ALBUMS
+      candidates = Array.from(new Map([...chartCandidates, ...candidates].map((album) => [album.id, album])).values())
     }
 
     // Score candidates
@@ -135,7 +132,7 @@ export async function getAlbumSuggestions(
           ? album.averageRating
           : album.reviews && album.reviews.length > 0
           ? album.reviews.reduce((s: number, r: { rating: number }) => s + r.rating, 0) / album.reviews.length
-          : 9.0
+          : undefined
 
       // In queue?
       if (queueAlbumIds.has(album.id)) {
@@ -165,19 +162,19 @@ export async function getAlbumSuggestions(
       }
 
       // Community rating boost - evaluated after rating calculation so database-backed albums receive it properly
-      if (effectiveRating >= 9.0) {
+      if (effectiveRating !== undefined && effectiveRating >= 9.0) {
         score += 15
         reasons.push(`Community Masterpiece (${effectiveRating.toFixed(1)}/10)`)
       }
 
       if (reasons.length === 0) {
-        reasons.push(`Top-rated in ${album.genres[0] || 'Music'}`)
+        reasons.push(`Explore ${album.genres[0] || 'Music'}`)
       }
 
       return {
         album: {
           ...album,
-          averageRating: Number(effectiveRating.toFixed(1)),
+          averageRating: effectiveRating === undefined ? undefined : Number(effectiveRating.toFixed(1)),
         },
         matchScore: Math.min(99, Math.max(65, score)),
         matchReason: reasons.slice(0, 2).join(' • '),
@@ -190,10 +187,6 @@ export async function getAlbumSuggestions(
     return scored.slice(0, 8)
   } catch (error) {
     console.error('Error generating suggestions:', error)
-    return SAMPLE_ALBUMS.slice(0, 4).map((a) => ({
-      album: a,
-      matchScore: 92,
-      matchReason: 'Classic staple album',
-    }))
+    return []
   }
 }

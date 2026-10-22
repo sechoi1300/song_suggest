@@ -1,43 +1,13 @@
-import fs from "fs";
-import path from "path";
+import './scripts/load-env'
 import { defineConfig } from "prisma/config";
-
-// Manually load .env or .env.local if needed
-const envFiles = [".env.local", ".env"];
-for (const envFile of envFiles) {
-  const envPath = path.join(process.cwd(), envFile);
-  if (fs.existsSync(envPath)) {
-    const content = fs.readFileSync(envPath, "utf-8");
-    content.split("\n").forEach((line: string) => {
-      const trimmed = line.trim();
-      if (trimmed && !trimmed.startsWith("#")) {
-        const match = trimmed.match(/^([^=]+)=(.*)$/);
-        if (match) {
-          const key = match[1].trim();
-          let value = match[2].trim();
-          // Remove quotes if present
-          if (
-            (value.startsWith('"') && value.endsWith('"')) ||
-            (value.startsWith("'") && value.endsWith("'"))
-          ) {
-            value = value.slice(1, -1);
-          }
-          if (!process.env[key]) {
-            process.env[key] = value;
-          }
-        }
-      }
-    });
-    break; // Use first file found
-  }
-}
 
 export default defineConfig({
   schema: "prisma/schema.prisma",
   migrations: {
     path: "prisma/migrations",
+    seed: "tsx prisma/seed.ts",
   },
   datasource: {
-    url: process.env.DATABASE_URL,
+    url: process.env.DIRECT_URL || process.env.DATABASE_URL,
   },
 });

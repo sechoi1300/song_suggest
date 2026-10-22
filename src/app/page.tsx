@@ -1,10 +1,12 @@
-import { getAlbums } from './actions/albums'
+import { getTrendingAlbumFeed } from './actions/albums'
 import AlbumList from '@/components/AlbumList'
 import Navbar from '@/components/Navbar'
 import Link from 'next/link'
 
+export const revalidate = 3600
+
 export default async function Home() {
-  const albums = await getAlbums()
+  const { albums, updatedAt, isStale } = await getTrendingAlbumFeed()
 
   return (
     <div className="min-h-screen bg-[#FAF7F2] text-stone-900">
@@ -38,13 +40,20 @@ export default async function Home() {
         {/* Catalog Section */}
         <div>
           <div className="flex items-center justify-between mb-4">
-            <h2 className="text-xl font-semibold text-stone-900 tracking-tight">Albums</h2>
+            <h2 className="text-xl font-semibold text-stone-900 tracking-tight">US Top 10 Albums</h2>
             <span className="text-xs text-stone-500">
               {albums.length} total
             </span>
           </div>
 
-          <AlbumList albums={albums} />
+          <p className="text-xs text-stone-500 mb-4">
+            <a href="https://itunes.apple.com/us/rss/topalbums/limit=10/json" className="underline">Apple iTunes sales chart</a>
+            {updatedAt && ` · Updated ${new Date(updatedAt).toLocaleDateString('en-US', { timeZone: 'America/Los_Angeles' })}`}
+            {isStale && albums.length > 0 && ' · Showing the last available chart'}
+          </p>
+          {albums.length > 0 ? <AlbumList albums={albums} /> : (
+            <p className="text-sm text-stone-500">The chart is temporarily unavailable. Please try again shortly.</p>
+          )}
         </div>
       </main>
     </div>

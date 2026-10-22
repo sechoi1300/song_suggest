@@ -11,7 +11,7 @@ function createPrismaClient(): PrismaClient {
     process.env.DATABASE_URL ||
     'postgresql://postgres:postgres@localhost:5432/song_suggest?schema=public'
 
-  const pool = new Pool({ connectionString })
+  const pool = new Pool({ connectionString, max: 5, connectionTimeoutMillis: 5000 })
   const adapter = new PrismaPg(pool)
 
   return new PrismaClient({

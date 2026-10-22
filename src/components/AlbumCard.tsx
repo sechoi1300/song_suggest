@@ -12,6 +12,7 @@ interface AlbumCardProps {
     coverImageUrl?: string | null
     averageRating?: number
     reviewCount?: number
+    chartRank?: number
   }
 }
 
@@ -33,6 +34,11 @@ export default function AlbumCard({ album }: AlbumCardProps) {
             </div>
           )}
 
+          {album.chartRank !== undefined && (
+            <div className="absolute top-2 left-2 bg-stone-900/80 text-white rounded-md px-2 py-1 text-xs font-semibold">
+              #{album.chartRank}
+            </div>
+          )}
           {album.averageRating !== undefined && (
             <div className="absolute bottom-2 right-2 backdrop-blur-md bg-stone-900/80 text-white rounded-md px-1.5 py-0.5 text-[10px] font-semibold tabular-nums">
               ★ {album.averageRating.toFixed(1)}

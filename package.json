@@ -7,16 +7,21 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "db:seed": "tsx prisma/seed.ts"
+    "test:music": "tsx --test tests/music.test.ts",
+    "db:generate": "node --use-system-ca node_modules/prisma/build/index.js generate",
+    "db:push": "node --use-system-ca node_modules/prisma/build/index.js db push",
+    "db:check": "tsx scripts/check-db.ts",
+    "db:seed": "tsx prisma/seed.ts",
+    "db:studio": "node --use-system-ca node_modules/prisma/build/index.js studio"
   },
   "dependencies": {
-    "@prisma/adapter-pg": "^7.10.0",
-    "@prisma/client": "^7.2.0",
+    "@prisma/adapter-pg": "7.10.0",
+    "@prisma/client": "7.10.0",
     "@types/pg": "^8.23.1",
     "next": "16.1.1",
     "next-auth": "^4.24.13",
     "pg": "^8.23.0",
-    "prisma": "^7.2.0",
+    "prisma": "7.10.0",
     "react": "19.2.3",
     "react-dom": "19.2.3",
     "zod": "^4.6.5"

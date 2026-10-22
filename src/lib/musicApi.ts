@@ -1,4 +1,6 @@
 import https from 'https'
+import { appleHttpsAgent } from './appleHttp'
+import { TOP_ALBUMS_URL, parseTopAlbumsFeed, type ITunesChartResponse } from './trendingAlbums'
 
 export interface MusicApiTrack {
   name: string
@@ -21,12 +23,12 @@ export interface MusicApiAlbumResult {
   previewUrl?: string
   length?: string
   source: 'api'
+  chartRank?: number
 }
 
 function httpsFallbackRequest<T>(url: string): Promise<T> {
   return new Promise((resolve, reject) => {
-    const agent = new https.Agent({ rejectUnauthorized: false })
-    const req = https.get(url, { agent, timeout: 8000 }, (res) => {
+    const req = https.get(url, { agent: appleHttpsAgent, timeout: 8000 }, (res) => {
       if (res.statusCode && (res.statusCode < 200 || res.statusCode >= 300)) {
         res.resume()
         return reject(new Error(`API responded with status code ${res.statusCode}`))
@@ -61,6 +63,7 @@ async function fetchJsonFromApi<T>(url: string): Promise<T> {
   try {
     const res = await fetch(url, {
       next: { revalidate: 3600 },
+      signal: AbortSignal.timeout(10000),
       headers: {
         Accept: 'application/json',
       },
@@ -72,8 +75,7 @@ async function fetchJsonFromApi<T>(url: string): Promise<T> {
 
     return (await res.json()) as T
   } catch {
-    // If native fetch fails (e.g. corporate proxy SSL certificate inspection with UNABLE_TO_GET_ISSUER_CERT_LOCALLY),
-    // seamlessly fall back to https agent so search and discovery never break.
+    // Native fetch may not include the Windows enterprise certificate store.
     return httpsFallbackRequest<T>(url)
   }
 }
@@ -154,7 +156,7 @@ export async function getAlbumDetailsFromMusicApi(
   collectionId: number
 ): Promise<MusicApiAlbumResult | null> {
   try {
-    const url = `https://itunes.apple.com/lookup?id=${collectionId}&entity=song`
+    const url = `https://itunes.apple.com/lookup?id=${collectionId}&entity=song&country=us&limit=200`
 
     interface ITunesLookupResponse {
       resultCount: number
@@ -244,54 +246,23 @@ export async function getAlbumDetailsFromMusicApi(
   }
 }
 
-let cachedFeaturedAlbums: MusicApiAlbumResult[] | null = null
+let cachedChart: ReturnType<typeof parseTopAlbumsFeed> | null = null
 let lastFetchedTime = 0
 
 /**
- * Fetches featured albums dynamically from the Music API across diverse artists & genres.
+ * Read Apple's US sales chart, preserving chart order. Refresh hourly on demand.
  */
-export async function getFeaturedAlbumsFromApi(): Promise<MusicApiAlbumResult[]> {
-  if (cachedFeaturedAlbums && Date.now() - lastFetchedTime < 1000 * 60 * 30) {
-    return cachedFeaturedAlbums
+export async function getTopAlbumsChart() {
+  if (cachedChart && Date.now() - lastFetchedTime < 3600000) {
+    return { ...cachedChart, isStale: false }
   }
-
-  const queries = [
-    'Kendrick Lamar',
-    'Radiohead',
-    'Daft Punk',
-    'Fleetwood Mac',
-    'The Beatles',
-    'Taylor Swift',
-    'Billie Eilish',
-    'Pink Floyd',
-    'SZA',
-  ]
-
   try {
-    const results = await Promise.all(
-      queries.map((q) => searchAlbumsFromMusicApi(q, 2))
-    )
-
-    const albums: MusicApiAlbumResult[] = []
-    const seen = new Set<string>()
-
-    for (const group of results) {
-      for (const item of group) {
-        if (!seen.has(item.id)) {
-          seen.add(item.id)
-          albums.push(item)
-        }
-      }
-    }
-
-    if (albums.length > 0) {
-      cachedFeaturedAlbums = albums
-      lastFetchedTime = Date.now()
-      return albums
-    }
+    const data = await fetchJsonFromApi<ITunesChartResponse>(TOP_ALBUMS_URL)
+    cachedChart = parseTopAlbumsFeed(data)
+    lastFetchedTime = Date.now()
+    return { ...cachedChart, isStale: false }
   } catch (err) {
-    console.warn('Failed to fetch live featured albums from API:', err)
+    console.warn('Failed to fetch Apple Top Albums chart:', err)
+    return { albums: cachedChart?.albums || [], updatedAt: cachedChart?.updatedAt || null, isStale: true }
   }
-
-  return []
 }

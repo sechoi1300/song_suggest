@@ -68,6 +68,8 @@ export default function AlbumDetail({
   const [trackProgress, setTrackProgress] = useState<number>(0)
   const [currentTime, setCurrentTime] = useState<number>(0)
   const audioRef = useRef<HTMLAudioElement | null>(null)
+  const playbackRequest = useRef(0)
+  const [previewError, setPreviewError] = useState<string | null>(null)
 
   const [tracklist, setTracklist] = useState<string[]>(() => {
     if (album.tracklist && album.tracklist.length > 0) return album.tracklist
@@ -77,7 +79,7 @@ export default function AlbumDetail({
 
   const buildPreviewMap = (tracks: Array<{ name: string; previewUrl?: string }>) => {
     const map: Record<string, string> = {}
-    tracks.forEach((t, i) => {
+    tracks.forEach((t) => {
       if (t.previewUrl) {
         const safeUrl = t.previewUrl.startsWith('/api/music/proxy-audio')
           ? t.previewUrl
@@ -88,7 +90,6 @@ export default function AlbumDetail({
         if (norm) {
           map[`norm_${norm}`] = safeUrl
         }
-        map[`idx_${i}`] = safeUrl
       }
     })
     return map
@@ -102,13 +103,14 @@ export default function AlbumDetail({
 
   // Fetch audio preview URLs for tracklist if needed
   useEffect(() => {
+    const controller = new AbortController()
     const fetchUrl = album.id.startsWith('itunes-')
       ? `/api/music/details?id=${encodeURIComponent(album.id)}`
       : `/api/music/details?title=${encodeURIComponent(album.title)}&artist=${encodeURIComponent(
           album.artist[0] || ''
         )}`
 
-    fetch(fetchUrl)
+    fetch(fetchUrl, { signal: controller.signal })
       .then((res) => (res.ok ? res.json() : null))
       .then((data) => {
         if (data?.album) {
@@ -120,20 +122,24 @@ export default function AlbumDetail({
           }
         }
       })
-      .catch((err) => console.warn('Could not load track audio previews:', err))
+      .catch((err) => {
+        if (err.name !== 'AbortError') setPreviewError('Could not load previews. Please reload this album.')
+      })
+    return () => controller.abort()
   }, [album.id, album.title, album.artist])
 
-  const getTrackPreviewUrl = (trackTitle: string, index: number): string | undefined => {
+  useEffect(() => {
+    const audio = audioRef.current
+    return () => { audio?.pause() }
+  }, [])
+
+  const getTrackPreviewUrl = (trackTitle: string): string | undefined => {
     const exact = previewUrls[trackTitle.toLowerCase().trim()]
     if (exact) return exact
 
     const norm = normalizeTrackName(trackTitle)
     if (norm && previewUrls[`norm_${norm}`]) {
       return previewUrls[`norm_${norm}`]
-    }
-
-    if (previewUrls[`idx_${index}`]) {
-      return previewUrls[`idx_${index}`]
     }
 
     return undefined
@@ -149,13 +155,15 @@ export default function AlbumDetail({
   }
 
   const handleStopAudio = () => {
+    playbackRequest.current++
+    audioRef.current?.pause()
     setPlayingTrack(null)
     setTrackProgress(0)
     setCurrentTime(0)
   }
 
-  const handleTogglePlay = (trackTitle: string, index: number) => {
-    const url = getTrackPreviewUrl(trackTitle, index)
+  const handleTogglePlay = (trackTitle: string) => {
+    const url = getTrackPreviewUrl(trackTitle)
     if (!url) return
 
     if (playingTrack === trackTitle) {
@@ -163,6 +171,8 @@ export default function AlbumDetail({
       handleStopAudio()
     } else {
       if (audioRef.current) {
+        const requestId = ++playbackRequest.current
+        setPreviewError(null)
         audioRef.current.pause()
         audioRef.current.src = url
         audioRef.current.currentTime = 0
@@ -171,8 +181,10 @@ export default function AlbumDetail({
         const playPromise = audioRef.current.play()
         if (playPromise !== undefined) {
           playPromise.catch((err) => {
+            if (requestId !== playbackRequest.current) return
             console.warn('Audio play error:', err)
             handleStopAudio()
+            setPreviewError('This preview could not play. Please try again or choose another track.')
           })
         }
       }
@@ -182,6 +194,17 @@ export default function AlbumDetail({
 
   return (
     <div className="space-y-8">
+      <audio
+        ref={audioRef}
+        preload="none"
+        onTimeUpdate={handleTimeUpdate}
+        onEnded={handleStopAudio}
+        onError={() => {
+          handleStopAudio()
+          setPreviewError('This preview is unavailable. Please try another track.')
+        }}
+        className="hidden"
+      />
       {/* Album Header */}
       <div className="bg-white border border-[#EAE4D9] rounded-2xl p-6 sm:p-8 shadow-xs">
         <div className="flex flex-col sm:flex-row gap-6 sm:gap-8 items-start">
@@ -282,18 +305,11 @@ export default function AlbumDetail({
             )}
           </div>
 
-          <audio
-            ref={audioRef}
-            preload="metadata"
-            onTimeUpdate={handleTimeUpdate}
-            onEnded={handleStopAudio}
-            onError={handleStopAudio}
-            className="hidden"
-          />
+          {previewError && <p role="status" className="text-xs text-stone-600 mb-3">{previewError}</p>}
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5">
             {tracklist.map((track, i) => {
-              const url = getTrackPreviewUrl(track, i)
+              const url = getTrackPreviewUrl(track)
               const isPlaying = playingTrack === track
 
               return (
@@ -334,7 +350,7 @@ export default function AlbumDetail({
                     <div className="relative z-10 flex items-center space-x-1.5 flex-shrink-0">
                       <button
                         type="button"
-                        onClick={() => handleTogglePlay(track, i)}
+                        onClick={() => handleTogglePlay(track)}
                         className={`px-2 py-0.5 rounded text-[10px] font-medium transition-colors cursor-pointer ${
                           isPlaying
                             ? 'bg-stone-900 text-stone-50'
@@ -355,7 +371,7 @@ export default function AlbumDetail({
       {/* Rating & Ranking Form */}
       <div>
         <ReviewForm
-          album={album}
+          album={{ ...album, tracklist }}
           initialReview={userReview || null}
           existingRankedAlbums={existingRankedAlbums}
           isBookmarked={isBookmarked}

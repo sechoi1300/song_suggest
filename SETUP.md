@@ -1,94 +1,147 @@
-# Setup Instructions
+# Supabase setup for Song Suggest
 
-## Prerequisites
-- Node.js installed
-- PostgreSQL database (Supabase, Neon, or local)
-- DATABASE_URL configured in `.env` file
+This app needs **one PostgreSQL database**. Prisma creates the application tables;
+you do not need to create each table yourself or add a second database for music.
+Apple supplies the chart, album metadata, artwork, and preview URLs. Audio is
+streamed through the app, not stored in Supabase.
 
-## Installation Steps
+## 1. Create the Supabase project
 
-### 1. Install Dependencies
-```bash
+1. Sign in at [Supabase](https://supabase.com/dashboard) and create a project on the Free plan.
+2. Choose a region near you and save the database password in your password manager.
+3. Wait until the database is ready. Click **Connect**, choose **Session pooler**,
+   and copy its PostgreSQL URI. Use port **5432** for local development on Windows.
+   The session pooler supports IPv4; the direct database endpoint normally needs IPv6.
+4. This app uses Prisma on the server. Disable the Supabase Data API in the project's
+   API settings if you are only using this app's database access.
+
+See the official [Prisma integration](https://supabase.com/docs/guides/database/prisma)
+and [connection guide](https://supabase.com/docs/guides/database/connecting-to-postgres).
+You do not need Supabase Auth, Storage, or browser API keys for the current app.
+NextAuth handles sign-in.
+
+## 2. Configure the app
+
+Use Node.js 24 LTS (the version in `.nvmrc`). In PowerShell in this project:
+
+```powershell
 npm install
+Copy-Item .env.example .env.local
+node -e "console.log(require('node:crypto').randomBytes(32).toString('base64'))"
 ```
 
-### 2. Set Up Environment Variables
-Create a `.env` file in the root directory with the following variables:
+If `.env.local` already exists, edit it instead of copying over it. Set:
 
-```env
-# Database
-DATABASE_URL="your-postgres-connection-string"
-
-# NextAuth
-AUTH_SECRET="generate-a-random-secret-here"  # Run: openssl rand -base64 32
+```dotenv
+DATABASE_URL="postgresql://postgres.PROJECT_REF:ENCODED_PASSWORD@YOUR_SESSION_POOLER_HOST:5432/postgres?sslmode=require"
+AUTH_SECRET="paste-the-generated-random-secret"
 NEXTAUTH_URL="http://localhost:3000"
-
-# OAuth Providers (optional but recommended)
-GOOGLE_CLIENT_ID="your-google-client-id"
-GOOGLE_CLIENT_SECRET="your-google-client-secret"
-
-GITHUB_ID="your-github-client-id"
-GITHUB_SECRET="your-github-client-secret"
-
-# Email Provider (optional)
-EMAIL_SERVER_HOST="smtp.example.com"
-EMAIL_SERVER_PORT=587
-EMAIL_SERVER_USER="your-email@example.com"
-EMAIL_SERVER_PASSWORD="your-email-password"
-EMAIL_FROM="noreply@yourapp.com"
 ```
 
-### 3. Generate Prisma Client
-```bash
-npx prisma generate
+Use the actual URI from the Connect dialog; the region and pooler hostname are project-specific.
+Replace its password placeholder with your database password. URL-encode reserved characters
+in the password, such as `@` as `%40`, `#` as `%23`, and `:` as `%3A`.
+These values stay in `.env.local`, which Git ignores. Do not put them in `NEXT_PUBLIC_*` variables.
+
+The app and database scripts read `.env.local` before `.env`. Existing shell environment
+variables take precedence. Restart the development server after changing these values.
+
+## 3. Create and verify the tables
+
+For a new, empty development database:
+
+```powershell
+npm run db:generate
+npm run db:push
+npm run db:check
 ```
 
-### 4. Push Database Schema
-```bash
-npx prisma db push
-```
+`db:generate` creates the Prisma client. `db:push` applies [prisma/schema.prisma](prisma/schema.prisma)
+to the database. `db:check` verifies connectivity and reads counts from the main app tables.
+Successful output begins with `Database connected; application tables are ready.`
 
-This will create all the tables in your database.
+| Table | Purpose |
+| --- | --- |
+| User | App identity and profile |
+| Album | Imported album metadata and community rating totals |
+| Review | Personal score, rank, favorite tracks, and review notes |
+| WantToListen | Saved listening queue |
+| Account, Session, VerificationToken | Auth support tables defined by the schema |
 
-### 5. Run Development Server
-```bash
+The current NextAuth configuration uses JWT sessions. Its OAuth callbacks synchronize
+`User` records; it does not currently use a Prisma auth adapter to store sessions or accounts.
+
+For an established database, inspect schema changes before applying them. For production,
+use versioned Prisma migrations (`prisma migrate dev` during development and
+`prisma migrate deploy` at deployment) instead of treating `db:push` as deployment history.
+
+## 4. Populate albums and start the app
+
+```powershell
+npm run db:seed
+npm run db:check
 npm run dev
 ```
 
-Visit http://localhost:3000
+`db:seed` imports the current Apple US Top 10 with tracklists. It is repeatable and
+preserves existing reviews and scores. The homepage reads the live chart even when
+the database already contains older albums. Opening a new chart album imports it
+when the database is available, so subsequent ratings and queue entries can refer to it.
 
-## Setting Up OAuth Providers
+Open [localhost:3000](http://localhost:3000). Sign in with a demo account, save an
+album to the queue, rate it, and check `/profile`. Reload the page to confirm persistence.
+You can inspect the rows in Supabase's Table Editor or run `npm run db:studio`.
 
-### Google OAuth
-1. Go to [Google Cloud Console](https://console.cloud.google.com/)
-2. Create a new project or select existing
-3. Enable Google+ API
-4. Create OAuth 2.0 credentials
-5. Add authorized redirect URI: `http://localhost:3000/api/auth/callback/google`
-6. Copy Client ID and Client Secret to `.env`
+The demo sign-in accepts an email without proving ownership. Use it for development;
+configure the existing Google/GitHub OAuth providers and restrict demo sign-in before
+opening the app to real users.
 
-### GitHub OAuth
-1. Go to GitHub Settings > Developer settings > OAuth Apps
-2. Create a new OAuth App
-3. Set Authorization callback URL: `http://localhost:3000/api/auth/callback/github`
-4. Copy Client ID and Client Secret to `.env`
+## Connection troubleshooting
 
-## Features
+- **Prisma engine download: unable to get local issuer certificate:** the database
+  commands enable Node's `--use-system-ca` flag so Windows' trusted corporate CAs
+  are included when downloading Prisma engines. Use Node.js 24 LTS or newer.
+  If the error persists, obtain the approved root CA PEM file from your IT team
+  and set it before retrying:
 
-- ✅ Album listing with average ratings
-- ✅ Album detail pages
-- ✅ Create new albums
-- ✅ Rate albums (0-10 scale)
-- ✅ Write text reviews
-- ✅ User authentication (Email, Google, GitHub)
-- ✅ User profiles with review history
-- ✅ Delete your own reviews
+  ```powershell
+  $env:NODE_EXTRA_CA_CERTS = 'C:\path\to\approved-corporate-ca.pem'
+  npm run db:generate
+  ```
 
-## Next Steps
+  See [Node's enterprise certificate guide](https://nodejs.org/en/learn/http/enterprise-network-configuration).
+- **ECONNREFUSED:** the app may still use the old localhost URL. Check `.env.local`,
+  shell variables, and restart the server.
+- **Authentication failed:** check the database password and URL encoding. A pooler
+  username contains the project reference, for example `postgres.PROJECT_REF`.
+- **IPv6 / host unreachable:** copy the Session pooler URI on port 5432.
+- **Tables missing:** run `npm run db:push`, then `npm run db:check`.
+- **Project paused:** resume the project in the Supabase dashboard.
+- **Signed in while the DB was offline:** sign out and back in after connecting so
+  the session is associated with a real database user.
+- **OneDrive locks the generated build cache:** use a fresh ignored output folder,
+  for example `$env:NEXT_BUILD_DIR = '.verification/local-build'` before `npm run build`.
+  Use the same value for `npm run start`. Avoid moving the old cache: Next's external
+  dependency files may be linked into it.
 
-- Add search functionality
-- Add filtering by genre
-- Add sorting options
-- Improve UI/UX
-- Add album cover image upload
-- Add social features (follow users, like reviews)
+For a serverless deployment, `DATABASE_URL` can use Supabase's transaction pooler
+(port 6543). Set `DIRECT_URL` to the Session pooler (5432) for Prisma CLI schema
+operations. `prisma.config.ts` uses `DIRECT_URL` when provided. Start with the session
+pooler for this local setup.
+
+## Charts and previews
+
+The homepage uses [Apple's US Top Albums JSON feed](https://itunes.apple.com/us/rss/topalbums/limit=10/json).
+It is an iTunes sales chart, not the Billboard 200 or a measure of fastest growth.
+No Apple API key is required. The server refreshes the chart on demand about once
+an hour. If refresh fails, it labels the last chart available in that server process;
+if no chart is available, it shows an unavailable message.
+
+Preview availability depends on Apple's catalog and storefront. The app matches
+track names and streams the available preview through `/api/music/proxy-audio`.
+It shows playback failures instead of silently leaving the player running.
+
+For corporate TLS inspection, the app's HTTPS fallback includes trusted OS certificates
+on modern Node.js. If your organization requires an additional CA file, set
+`NODE_EXTRA_CA_CERTS` to the approved PEM file before starting Node.
+See [Node certificate options](https://nodejs.org/api/cli.html#node_extra_ca_certsfile).
