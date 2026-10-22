@@ -10,8 +10,6 @@ import HeadToHeadRanker, { ExistingRankedAlbum } from './HeadToHeadRanker'
 import {
   getTierFromScore,
   BELI_VIBES,
-  LISTEN_AGAIN_OPTIONS,
-  LISTENED_WITH_OPTIONS,
 } from '@/lib/beli'
 
 interface ReviewFormProps {
@@ -56,12 +54,6 @@ export default function ReviewForm({
   )
   const [skipTrack, setSkipTrack] = useState<string>(initialReview?.skipTrack ?? '')
   const [vibes, setVibes] = useState<string[]>(initialReview?.vibes ?? [])
-  const [listenAgain, setListenAgain] = useState<string>(
-    initialReview?.listenAgain ?? 'ON_REPEAT'
-  )
-  const [listenedWith, setListenedWith] = useState<string>(
-    initialReview?.listenedWith ?? 'Headphones 🎧'
-  )
   const [reviewText, setReviewText] = useState(initialReview?.reviewText ?? '')
 
   const [bookmarked, setBookmarked] = useState(isBookmarked)
@@ -149,8 +141,8 @@ export default function ReviewForm({
         favoriteTracks,
         skipTrack: skipTrack || undefined,
         vibes,
-        listenAgain,
-        listenedWith,
+        listenAgain: initialReview?.listenAgain ?? undefined,
+        listenedWith: initialReview?.listenedWith ?? undefined,
         reviewText,
       })
 
@@ -299,10 +291,15 @@ export default function ReviewForm({
             </div>
 
             <div>
-              <label className="block text-xs font-medium text-stone-700 mt-3 mb-1">
-                Skip Track
+              <label htmlFor="skipTrack" className="block text-xs font-medium text-stone-700 mt-3 mb-1">
+                Skip Track (Optional)
               </label>
+              <p id="skipTrack-help" className="text-xs text-stone-500 mb-2">
+                Pick a song you would usually skip when listening to this album.
+              </p>
               <select
+                id="skipTrack"
+                aria-describedby="skipTrack-help"
                 value={skipTrack}
                 onChange={(e) => setSkipTrack(e.target.value)}
                 className="w-full px-3 py-2 bg-white border border-[#EAE4D9] rounded-lg text-stone-800 text-xs focus:outline-none focus:ring-1 focus:ring-stone-400"
@@ -341,48 +338,6 @@ export default function ReviewForm({
                 </button>
               )
             })}
-          </div>
-        </div>
-
-        {/* Replay & Setting */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <div className="space-y-1.5">
-            <label className="block text-xs font-medium text-stone-700">
-              Replay
-            </label>
-            <div className="grid grid-cols-3 gap-1.5">
-              {LISTEN_AGAIN_OPTIONS.map((opt) => (
-                <button
-                  key={opt.value}
-                  type="button"
-                  onClick={() => setListenAgain(opt.value)}
-                  className={`py-1.5 px-1 text-center rounded-lg text-xs transition-colors cursor-pointer border ${
-                    listenAgain === opt.value
-                      ? 'bg-stone-900 text-stone-50 border-stone-900 font-medium'
-                      : 'bg-[#FAF7F2] text-stone-700 border-[#EAE4D9] hover:bg-[#F3EDE2]'
-                  }`}
-                >
-                  {opt.label.replace(/ [^a-zA-Z0-9 ]/g, '')}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          <div className="space-y-1.5">
-            <label className="block text-xs font-medium text-stone-700">
-              Setting
-            </label>
-            <select
-              value={listenedWith}
-              onChange={(e) => setListenedWith(e.target.value)}
-              className="w-full px-3 py-2 bg-white border border-[#EAE4D9] rounded-lg text-stone-800 text-xs focus:outline-none focus:ring-1 focus:ring-stone-400"
-            >
-              {LISTENED_WITH_OPTIONS.map((opt) => (
-                <option key={opt} value={opt}>
-                  {opt}
-                </option>
-              ))}
-            </select>
           </div>
         </div>
 
