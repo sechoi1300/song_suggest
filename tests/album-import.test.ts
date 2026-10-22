@@ -1,7 +1,8 @@
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
 import { prisma } from '../src/lib/prisma'
-import { importOrGetAlbumFromApi } from '../src/app/actions/albums'
+import { getAlbumById, importOrGetAlbumFromApi } from '../src/app/actions/albums'
+import { SAMPLE_ALBUMS } from '../src/lib/sampleAlbums'
 
 test('render-time album import returns the persisted album without invalidating the page cache', async (t) => {
   const persisted = {
@@ -35,4 +36,36 @@ test('render-time album import returns the persisted album without invalidating 
   assert.equal(result.album?.createdAt, persisted.createdAt)
   assert.equal(result.album?.id, persisted.id)
   assert.equal(warn.mock.callCount(), 0)
+})
+
+for (const rating of [null, 8.2]) {
+  test(`album details use stored ratings (${rating}) instead of sample community scores`, async (t) => {
+    const sample = SAMPLE_ALBUMS[0]
+    const persisted = { ...sample, averageRating: rating, reviewCount: rating === null ? 0 : 1 }
+    const album = prisma.album
+    const original = { findUnique: album.findUnique, create: album.create }
+    let reads = 0
+    Object.assign(album, {
+      findUnique: async () => ++reads === 1 ? null : persisted,
+    })
+    t.after(() => { Object.assign(album, original) })
+    const result = await getAlbumById(sample.id)
+    assert.equal(result?.averageRating, rating ?? undefined)
+    assert.equal(result?.reviewCount, persisted.reviewCount)
+  })
+}
+
+test('offline album details do not report fabricated sample reviews', async (t) => {
+  const album = prisma.album
+  const original = { findUnique: album.findUnique, create: album.create }
+  Object.assign(album, {
+    findUnique: async () => { throw new Error('Database unavailable') },
+    create: async () => { throw new Error('Database unavailable') },
+  })
+  t.after(() => { Object.assign(album, original) })
+  t.mock.method(console, 'warn', () => {})
+  t.mock.method(globalThis, 'fetch', async () => new Response('', { status: 503 }))
+  const result = await getAlbumById(SAMPLE_ALBUMS[0].id)
+  assert.equal(result?.averageRating, undefined)
+  assert.equal(result?.reviewCount, 0)
 })

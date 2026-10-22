@@ -5,6 +5,26 @@ import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { revalidatePath } from 'next/cache'
 
+export async function removeWantToListen(albumId: string) {
+  try {
+    const session = await getServerSession(authOptions)
+    if (!session?.user?.id) {
+      return { success: false, error: 'You must be signed in to update your queue' }
+    }
+
+    await prisma.wantToListen.deleteMany({
+      where: { userId: session.user.id, albumId },
+    })
+    revalidatePath(`/albums/${albumId}`)
+    revalidatePath('/profile')
+    revalidatePath('/queue')
+    return { success: true }
+  } catch (error) {
+    console.error('Error removing queued album:', error)
+    return { success: false, error: 'Failed to remove album from queue' }
+  }
+}
+
 export async function toggleWantToListen(albumId: string, notes?: string) {
   try {
     const session = await getServerSession(authOptions)

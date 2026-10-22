@@ -32,10 +32,11 @@ interface ReviewCardProps {
   albumId: string
 }
 
-export default function ReviewCard({ review, albumId }: ReviewCardProps) {
+export default function ReviewCard({ review }: ReviewCardProps) {
   const { data: session } = useSession()
   const router = useRouter()
   const [isDeleting, setIsDeleting] = useState(false)
+  const [error, setError] = useState('')
 
   const formatDate = (date: Date | string) => {
     const d = typeof date === 'string' ? new Date(date) : date
@@ -48,11 +49,19 @@ export default function ReviewCard({ review, albumId }: ReviewCardProps) {
     }
 
     setIsDeleting(true)
-    const result = await deleteReview(review.id, albumId)
-    if (result.success) {
-      router.refresh()
+    setError('')
+    try {
+      const result = await deleteReview(review.id)
+      if (result.success) {
+        router.refresh()
+      } else {
+        setError(result.error || 'Failed to delete rating')
+      }
+    } catch {
+      setError('Failed to delete rating. Please try again.')
+    } finally {
+      setIsDeleting(false)
     }
-    setIsDeleting(false)
   }
 
   const isOwnReview = session?.user?.id === review.userId
@@ -60,6 +69,7 @@ export default function ReviewCard({ review, albumId }: ReviewCardProps) {
 
   return (
     <div className="bg-white border border-[#EAE4D9] rounded-xl p-4 transition-colors">
+      {error && <p role="alert" className="text-xs text-rose-700 mb-2">{error}</p>}
       <div className="flex items-start justify-between">
         <div className="flex items-center space-x-3 flex-1 min-w-0">
           {review.user.image ? (

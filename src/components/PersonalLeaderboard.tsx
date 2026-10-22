@@ -37,9 +37,11 @@ export default function PersonalLeaderboard({ initialReviews }: PersonalLeaderbo
   const [selectedTierFilter, setSelectedTierFilter] = useState<string>('ALL')
   const [search, setSearch] = useState('')
   const [isUpdating, setIsUpdating] = useState(false)
+  const [error, setError] = useState('')
 
   // Move album up in rank
   const handleMove = async (index: number, direction: 'UP' | 'DOWN') => {
+    if (isUpdating) return
     if (direction === 'UP' && index === 0) return
     if (direction === 'DOWN' && index === reviews.length - 1) return
 
@@ -72,21 +74,41 @@ export default function PersonalLeaderboard({ initialReviews }: PersonalLeaderbo
 
     setReviews(updated)
     setIsUpdating(true)
-    const res = await reorderUserRankedReviews(updated.map((r) => r.id))
-    if (res.success && res.reviews) {
-      setReviews((res.reviews as unknown) as RankedAlbumItem[])
+    setError('')
+    try {
+      const res = await reorderUserRankedReviews(updated.map((r) => r.id))
+      if (res.success && res.reviews) {
+        setReviews(res.reviews as RankedAlbumItem[])
+      } else {
+        setReviews(reviews)
+        setError(res.error || 'Failed to reorder albums')
+      }
+    } catch {
+      setReviews(reviews)
+      setError('Failed to reorder albums. Please try again.')
+    } finally {
+      setIsUpdating(false)
     }
-    setIsUpdating(false)
   }
 
-  const handleDelete = async (reviewId: string, albumId: string) => {
+  const handleDelete = async (reviewId: string) => {
+    if (isUpdating) return
     if (!confirm('Remove this album from your personal leaderboard?')) return
 
-    const remaining = reviews.filter((r) => r.id !== reviewId)
-    const reordered = remaining.map((r, i) => ({ ...r, rank: i + 1 }))
-    setReviews(reordered)
-
-    await deleteReview(reviewId, albumId)
+    setIsUpdating(true)
+    setError('')
+    try {
+      const result = await deleteReview(reviewId)
+      if (result.success) {
+        setReviews((current) => current.filter((r) => r.id !== reviewId).map((r, i) => ({ ...r, rank: i + 1 })))
+      } else {
+        setError(result.error || 'Failed to remove album')
+      }
+    } catch {
+      setError('Failed to remove album. Please try again.')
+    } finally {
+      setIsUpdating(false)
+    }
   }
 
   // Filtered views
@@ -123,6 +145,7 @@ export default function PersonalLeaderboard({ initialReviews }: PersonalLeaderbo
 
   return (
     <div className="space-y-4">
+      {error && <p role="alert" className="text-sm text-rose-700">{error}</p>}
       {/* Filtering & Search Bar */}
       <div className="flex flex-col sm:flex-row gap-2.5 items-stretch sm:items-center justify-between">
         {/* Search */}
@@ -176,6 +199,7 @@ export default function PersonalLeaderboard({ initialReviews }: PersonalLeaderbo
         {filtered.map((item, index) => {
           const tier = getTierFromScore(item.rating)
           const actualRank = item.rank ?? index + 1
+          const actualIndex = reviews.findIndex((review) => review.id === item.id)
 
           return (
             <div
@@ -247,8 +271,8 @@ export default function PersonalLeaderboard({ initialReviews }: PersonalLeaderbo
               <div className="flex-shrink-0 flex flex-col items-center space-y-0.5 pl-1.5 border-l border-[#F0EAE1]">
                 <button
                   type="button"
-                  onClick={() => handleMove(index, 'UP')}
-                  disabled={index === 0 || isUpdating}
+                  onClick={() => handleMove(actualIndex, 'UP')}
+                  disabled={actualIndex === 0 || isUpdating}
                   title="Move up"
                   className="w-5 h-5 rounded hover:bg-[#FAF7F2] text-stone-400 hover:text-stone-900 flex items-center justify-center text-[10px] disabled:opacity-20 cursor-pointer"
                 >
@@ -256,8 +280,8 @@ export default function PersonalLeaderboard({ initialReviews }: PersonalLeaderbo
                 </button>
                 <button
                   type="button"
-                  onClick={() => handleMove(index, 'DOWN')}
-                  disabled={index === reviews.length - 1 || isUpdating}
+                  onClick={() => handleMove(actualIndex, 'DOWN')}
+                  disabled={actualIndex === reviews.length - 1 || isUpdating}
                   title="Move down"
                   className="w-5 h-5 rounded hover:bg-[#FAF7F2] text-stone-400 hover:text-stone-900 flex items-center justify-center text-[10px] disabled:opacity-20 cursor-pointer"
                 >
@@ -268,7 +292,8 @@ export default function PersonalLeaderboard({ initialReviews }: PersonalLeaderbo
               {/* Delete button */}
               <button
                 type="button"
-                onClick={() => handleDelete(item.id, item.albumId)}
+                onClick={() => handleDelete(item.id)}
+                disabled={isUpdating}
                 title="Remove"
                 className="opacity-0 group-hover:opacity-100 text-stone-300 hover:text-stone-700 text-xs px-1 transition-opacity cursor-pointer"
               >

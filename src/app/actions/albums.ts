@@ -202,6 +202,8 @@ export async function importOrGetAlbumFromApi(collectionIdOrId: number | string)
       createdAt: new Date(),
       updatedAt: new Date(),
       spotifyUrl: null,
+      averageRating: null,
+      reviewCount: 0,
       reviews: [],
     }
     return { success: true, album: memoryAlbum }
@@ -323,8 +325,8 @@ export async function getAlbumById(id: string) {
       if (res.success && res.album) {
         return {
           ...res.album,
-          averageRating: sample?.averageRating ?? undefined,
-          reviewCount: sample?.reviewCount ?? 0,
+          averageRating: res.album.averageRating ?? undefined,
+          reviewCount: res.album.reviewCount,
           reviews: [],
         }
       }
@@ -337,6 +339,8 @@ export async function getAlbumById(id: string) {
 
   return {
     ...sample,
+    averageRating: undefined,
+    reviewCount: 0,
     createdAt: new Date(),
     updatedAt: new Date(),
     spotifyUrl: null,

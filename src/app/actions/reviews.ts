@@ -92,6 +92,7 @@ export async function saveBeliReview(input: SaveBeliReviewInput) {
         const insertIdx = otherReviews.findIndex((r) => valid.score > r.rating)
         assignedRank = insertIdx === -1 ? otherReviews.length + 1 : insertIdx + 1
       }
+      assignedRank = Math.min(assignedRank, otherReviews.length + 1)
 
       let savedReview
       if (existingReview) {
@@ -135,14 +136,10 @@ export async function saveBeliReview(input: SaveBeliReviewInput) {
         },
       })
 
-      // 4. Resequence ranks cleanly
-      const allUserReviews = await tx.review.findMany({
-        where: { userId },
-        orderBy: [
-          { rank: 'asc' },
-          { rating: 'desc' },
-        ],
-      })
+      // Insert explicitly so an existing album at this rank is shifted down,
+      // even when its score ties or exceeds the newly saved score.
+      const allUserReviews = [...otherReviews]
+      allUserReviews.splice(assignedRank - 1, 0, savedReview)
 
       for (let i = 0; i < allUserReviews.length; i++) {
         const current = allUserReviews[i]
@@ -276,11 +273,11 @@ export async function reorderUserRankedReviews(reviewIdsInOrder: string[]) {
 
     const userId = session.user.id
 
-    // Fetch existing reviews in current state
+    // A reorder must contain the complete list, or omitted reviews retain
+    // conflicting ranks. Never silently discard unknown or duplicate IDs.
     const currentReviews = await prisma.review.findMany({
       where: {
         userId,
-        id: { in: reviewIdsInOrder },
       },
       include: {
         album: {
@@ -297,6 +294,13 @@ export async function reorderUserRankedReviews(reviewIdsInOrder: string[]) {
     })
 
     const reviewMap = new Map(currentReviews.map((r) => [r.id, r]))
+    if (
+      reviewIdsInOrder.length !== currentReviews.length ||
+      new Set(reviewIdsInOrder).size !== currentReviews.length ||
+      reviewIdsInOrder.some((id) => !reviewMap.has(id))
+    ) {
+      return { success: false, error: 'Your ranked list has changed. Refresh the page and try again.' }
+    }
     const orderedReviews = reviewIdsInOrder
       .map((id) => reviewMap.get(id))
       .filter((r): r is NonNullable<typeof r> => r !== undefined)
@@ -374,7 +378,7 @@ export async function reorderUserRankedReviews(reviewIdsInOrder: string[]) {
   }
 }
 
-export async function deleteReview(reviewId: string, albumId: string) {
+export async function deleteReview(reviewId: string) {
   try {
     const session = await getServerSession(authOptions)
     if (!session?.user?.id) {
@@ -388,6 +392,7 @@ export async function deleteReview(reviewId: string, albumId: string) {
     if (!review || review.userId !== session.user.id) {
       return { success: false, error: 'You can only delete your own reviews' }
     }
+    const albumId = review.albumId
 
     // Delete review, re-sequence ranks, and recalculate album stats in a single transaction
     await prisma.$transaction(async (tx) => {
@@ -430,6 +435,7 @@ export async function deleteReview(reviewId: string, albumId: string) {
 
     revalidatePath(`/albums/${albumId}`)
     revalidatePath('/profile')
+    revalidatePath('/')
     return { success: true }
   } catch (error) {
     console.error('Error deleting review:', error)

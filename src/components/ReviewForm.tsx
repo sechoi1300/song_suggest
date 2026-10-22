@@ -89,6 +89,7 @@ export default function ReviewForm({
   }
 
   const tier = getTierFromScore(score)
+  const comparisonAlbums = existingRankedAlbums.filter((item) => item.albumId !== album.id)
 
   const handleToggleVibe = (vibe: string) => {
     if (vibes.includes(vibe)) {
@@ -119,11 +120,19 @@ export default function ReviewForm({
 
   const handleToggleQueue = async () => {
     setIsQueueLoading(true)
-    const res = await toggleWantToListen(album.id)
-    if (res.success) {
-      setBookmarked(res.isBookmarked ?? !bookmarked)
+    setError('')
+    try {
+      const res = await toggleWantToListen(album.id)
+      if (res.success) {
+        setBookmarked(res.isBookmarked ?? !bookmarked)
+      } else {
+        setError(res.error || 'Failed to update queue')
+      }
+    } catch {
+      setError('Failed to update queue. Please try again.')
+    } finally {
+      setIsQueueLoading(false)
     }
-    setIsQueueLoading(false)
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -132,33 +141,39 @@ export default function ReviewForm({
     setError('')
     setSuccessMsg('')
 
-    const result = await saveBeliReview({
-      albumId: album.id,
-      score,
-      targetRank,
-      favoriteTracks,
-      skipTrack: skipTrack || undefined,
-      vibes,
-      listenAgain,
-      listenedWith,
-      reviewText,
-    })
+    try {
+      const result = await saveBeliReview({
+        albumId: album.id,
+        score,
+        targetRank,
+        favoriteTracks,
+        skipTrack: skipTrack || undefined,
+        vibes,
+        listenAgain,
+        listenedWith,
+        reviewText,
+      })
 
-    if (result.success) {
-      setSuccessMsg('Album saved to your personal leaderboard! 🎉')
-      router.refresh()
-    } else {
-      setError(result.error || 'Failed to submit review')
+      if (result.success) {
+        setBookmarked(false)
+        setTargetRank(result.review?.rank ?? undefined)
+        setSuccessMsg('Album saved to your personal leaderboard! 🎉')
+        router.refresh()
+      } else {
+        setError(result.error || 'Failed to submit review')
+      }
+    } catch {
+      setError('Failed to save review. Please try again.')
+    } finally {
+      setIsSubmitting(false)
     }
-
-    setIsSubmitting(false)
   }
 
   if (mode === 'HEAD_TO_HEAD') {
     return (
       <HeadToHeadRanker
         currentAlbum={album}
-        existingAlbums={existingRankedAlbums}
+        existingAlbums={comparisonAlbums}
         onRankDetermined={handleRankDetermined}
         onCancel={() => setMode('FORM')}
       />
@@ -173,7 +188,7 @@ export default function ReviewForm({
           <h3 className="text-lg font-semibold text-stone-900">Rate & Rank</h3>
         </div>
         <div className="flex items-center space-x-2">
-          {existingRankedAlbums.length > 0 && (
+          {comparisonAlbums.length > 0 && (
             <button
               type="button"
               onClick={() => setMode('HEAD_TO_HEAD')}
@@ -186,7 +201,7 @@ export default function ReviewForm({
           <button
             type="button"
             onClick={handleToggleQueue}
-            disabled={isQueueLoading}
+            disabled={isQueueLoading || isSubmitting}
             className={`inline-flex items-center px-3 py-1.5 rounded-lg border text-xs font-medium transition-colors cursor-pointer ${
               bookmarked
                 ? 'bg-[#EAE4D9] text-stone-900 border-[#D9D1C3]'
@@ -199,7 +214,7 @@ export default function ReviewForm({
       </div>
 
       {error && (
-        <div className="bg-rose-50 border border-rose-200 text-rose-700 px-4 py-2.5 rounded-xl text-xs mb-4">
+        <div role="alert" className="bg-rose-50 border border-rose-200 text-rose-700 px-4 py-2.5 rounded-xl text-xs mb-4">
           {error}
         </div>
       )}
@@ -391,7 +406,7 @@ export default function ReviewForm({
 
         <button
           type="submit"
-          disabled={isSubmitting}
+          disabled={isSubmitting || isQueueLoading}
           className="w-full py-2.5 px-4 rounded-lg bg-stone-900 hover:bg-stone-800 text-stone-50 font-medium text-xs transition-colors disabled:opacity-50 cursor-pointer"
         >
           {isSubmitting ? 'Saving...' : 'Save Rating'}

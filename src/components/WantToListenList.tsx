@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
-import { toggleWantToListen } from '@/app/actions/wantToListen'
+import { removeWantToListen } from '@/app/actions/wantToListen'
 
 export interface WantToListenItem {
   id: string
@@ -27,10 +27,25 @@ interface WantToListenListProps {
 
 export default function WantToListenList({ initialItems }: WantToListenListProps) {
   const [items, setItems] = useState<WantToListenItem[]>(initialItems)
+  const [isUpdating, setIsUpdating] = useState(false)
+  const [error, setError] = useState('')
 
   const handleRemove = async (albumId: string) => {
-    setItems((prev) => prev.filter((i) => i.albumId !== albumId))
-    await toggleWantToListen(albumId)
+    if (isUpdating) return
+    setIsUpdating(true)
+    setError('')
+    try {
+      const result = await removeWantToListen(albumId)
+      if (result.success) {
+        setItems((prev) => prev.filter((i) => i.albumId !== albumId))
+      } else {
+        setError(result.error || 'Failed to remove album from queue')
+      }
+    } catch {
+      setError('Failed to remove album from queue. Please try again.')
+    } finally {
+      setIsUpdating(false)
+    }
   }
 
   if (items.length === 0) {
@@ -52,6 +67,7 @@ export default function WantToListenList({ initialItems }: WantToListenListProps
 
   return (
     <div className="space-y-3">
+      {error && <p role="alert" className="text-sm text-rose-700">{error}</p>}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
         {items.map((item) => (
           <div
@@ -97,6 +113,7 @@ export default function WantToListenList({ initialItems }: WantToListenListProps
               <button
                 type="button"
                 onClick={() => handleRemove(item.albumId)}
+                disabled={isUpdating}
                 title="Remove"
                 className="text-stone-300 hover:text-stone-700 p-1 text-xs transition-colors cursor-pointer"
               >
