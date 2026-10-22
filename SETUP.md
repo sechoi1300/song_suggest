@@ -98,6 +98,12 @@ opening the app to real users.
 
 ## Connection troubleshooting
 
+- **JWT_SESSION_ERROR / decryption operation failed:** a saved session cookie may
+  have been encrypted using an older `AUTH_SECRET`, or belong to another app on
+  localhost. Keep `AUTH_SECRET` stable in `.env.local`, restart the server after
+  changing it, and sign out and back in. If needed, clear the localhost site's
+  `next-auth.session-token` cookie (including numbered chunks), then sign in again.
+  Changing the secret invalidates existing sessions; database users and reviews remain.
 - **Prisma engine download: unable to get local issuer certificate:** the database
   commands enable Node's `--use-system-ca` flag so Windows' trusted corporate CAs
   are included when downloading Prisma engines. Use Node.js 24 LTS or newer.
@@ -140,6 +146,12 @@ if no chart is available, it shows an unavailable message.
 Preview availability depends on Apple's catalog and storefront. The app matches
 track names and streams the available preview through `/api/music/proxy-audio`.
 It shows playback failures instead of silently leaving the player running.
+
+Apple previews use AAC audio in an M4A container. VS Code's embedded browser does
+not support this codec. Open `http://localhost:3000` directly in Chrome, Edge, or
+Safari to test playback. The player checks codec support before starting a preview
+and shows a browser-specific explanation when the format is unsupported.
+See [VS Code's supported media formats](https://code.visualstudio.com/api/extension-guides/webview#supported-media-formats).
 
 For corporate TLS inspection, the app's HTTPS fallback includes trusted OS certificates
 on modern Node.js. If your organization requires an additional CA file, set

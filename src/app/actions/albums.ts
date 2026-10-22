@@ -184,7 +184,6 @@ export async function importOrGetAlbumFromApi(collectionIdOrId: number | string)
         tracklist: details.tracklist || [],
       },
     })
-    revalidatePath('/')
     return { success: true, album: { ...created, tracks: details.tracks } }
   } catch (dbError) {
     console.warn('Could not persist album to DB, serving in-memory representation:', dbError)

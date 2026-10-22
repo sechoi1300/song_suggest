@@ -5,6 +5,7 @@ import ReviewForm from './ReviewForm'
 import ReviewList from './ReviewList'
 import { ExistingRankedAlbum } from './HeadToHeadRanker'
 import { getTierFromScore } from '@/lib/beli'
+import { getAudioPreviewSupportError, getAudioPreviewPlaybackError } from '@/lib/audioPreviewSupport'
 
 interface ReviewWithUser {
   id: string
@@ -164,27 +165,34 @@ export default function AlbumDetail({
 
   const handleTogglePlay = (trackTitle: string) => {
     const url = getTrackPreviewUrl(trackTitle)
-    if (!url) return
+    const audio = audioRef.current
+    if (!url || !audio) return
+
+    const unsupported = getAudioPreviewSupportError(audio)
+    if (unsupported) {
+      setPreviewError(unsupported)
+      return
+    }
 
     if (playingTrack === trackTitle) {
-      audioRef.current?.pause()
+      audio.pause()
       handleStopAudio()
     } else {
-      if (audioRef.current) {
+      if (audio) {
         const requestId = ++playbackRequest.current
         setPreviewError(null)
-        audioRef.current.pause()
-        audioRef.current.src = url
-        audioRef.current.currentTime = 0
+        audio.pause()
+        audio.src = url
+        audio.currentTime = 0
         setTrackProgress(0)
         setCurrentTime(0)
-        const playPromise = audioRef.current.play()
+        const playPromise = audio.play()
         if (playPromise !== undefined) {
           playPromise.catch((err) => {
             if (requestId !== playbackRequest.current) return
             console.warn('Audio play error:', err)
             handleStopAudio()
-            setPreviewError('This preview could not play. Please try again or choose another track.')
+            setPreviewError(getAudioPreviewPlaybackError(audio, err))
           })
         }
       }
@@ -199,9 +207,12 @@ export default function AlbumDetail({
         preload="none"
         onTimeUpdate={handleTimeUpdate}
         onEnded={handleStopAudio}
-        onError={() => {
+        onError={(event) => {
+          const audio = event.currentTarget
+          console.warn('Audio preview error:', { code: audio.error?.code, message: audio.error?.message })
+          const message = getAudioPreviewPlaybackError(audio)
           handleStopAudio()
-          setPreviewError('This preview is unavailable. Please try another track.')
+          setPreviewError(message)
         }}
         className="hidden"
       />

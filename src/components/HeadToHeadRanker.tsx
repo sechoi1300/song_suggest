@@ -2,6 +2,7 @@
 
 import { useState, useRef } from 'react'
 import { calculateScoreFromRankPlacement } from '@/lib/beli'
+import { getAudioPreviewSupportError, getAudioPreviewPlaybackError } from '@/lib/audioPreviewSupport'
 
 export interface ExistingRankedAlbum {
   albumId: string
@@ -44,6 +45,7 @@ export default function HeadToHeadRanker({
   >({})
   const [loadingPreviewId, setLoadingPreviewId] = useState<string | null>(null)
   const audioRef = useRef<HTMLAudioElement | null>(null)
+  const [previewError, setPreviewError] = useState<string | null>(null)
 
   // Current comparison candidate index
   const midIndex = Math.floor((low + high) / 2)
@@ -106,6 +108,15 @@ export default function HeadToHeadRanker({
   ) => {
     e.stopPropagation()
 
+    if (audioRef.current) {
+      const unsupported = getAudioPreviewSupportError(audioRef.current)
+      if (unsupported) {
+        setPreviewError(unsupported)
+        return
+      }
+    }
+    setPreviewError(null)
+
     if (playingAlbumId === album.id) {
       stopAudio()
       return
@@ -167,6 +178,7 @@ export default function HeadToHeadRanker({
         if (p !== undefined) {
           p.catch((err) => {
             console.warn('Preview play error:', err)
+            if (audioRef.current) setPreviewError(getAudioPreviewPlaybackError(audioRef.current, err))
             stopAudio()
           })
         }
@@ -187,9 +199,13 @@ export default function HeadToHeadRanker({
         preload="metadata"
         onTimeUpdate={handleTimeUpdate}
         onEnded={stopAudio}
-        onError={() => stopAudio()}
+        onError={(event) => {
+          setPreviewError(getAudioPreviewPlaybackError(event.currentTarget))
+          stopAudio()
+        }}
         className="hidden"
       />
+      {previewError && <p role="status" className="text-xs text-stone-600 mb-3">{previewError}</p>}
 
       {/* Header */}
       <div className="text-center mb-6">

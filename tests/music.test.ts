@@ -6,8 +6,27 @@ import { PassThrough } from 'node:stream'
 import { test, type TestContext } from 'node:test'
 import { normalizeAudioUrl, proxyAppleAudio } from '../src/lib/audioProxy'
 import { parseTopAlbumsFeed } from '../src/lib/trendingAlbums'
+import { getAudioPreviewSupportError, getAudioPreviewPlaybackError } from '../src/lib/audioPreviewSupport'
 
 const audioUrl = 'https://audio-ssl.itunes.apple.com/itunes-assets/preview.m4a'
+
+test('browsers without AAC receive an actionable explanation before playback', () => {
+  let checkedType = ''
+  const unsupported = getAudioPreviewSupportError({ canPlayType: (type) => { checkedType = type; return '' } })
+  assert.equal(checkedType, 'audio/mp4; codecs="mp4a.40.2"')
+  assert.match(unsupported!, /Chrome, Edge, or Safari/)
+  assert.match(unsupported!, /built-in browser/)
+  assert.equal(getAudioPreviewSupportError({ canPlayType: () => 'probably' }), null)
+})
+
+test('playback errors distinguish codec support, decoding, permissions, and transport', () => {
+  const mediaError = (code: number) => ({ code, message: '', MEDIA_ERR_ABORTED: 1, MEDIA_ERR_NETWORK: 2, MEDIA_ERR_DECODE: 3, MEDIA_ERR_SRC_NOT_SUPPORTED: 4 }) as MediaError
+  assert.match(getAudioPreviewPlaybackError({ canPlayType: () => '', error: mediaError(4) }), /built-in browser/)
+  assert.match(getAudioPreviewPlaybackError({ canPlayType: () => 'maybe', error: mediaError(3) }), /decode/)
+  assert.match(getAudioPreviewPlaybackError({ canPlayType: () => 'maybe', error: mediaError(2) }), /connection/)
+  const permission = Object.assign(new Error('Blocked'), { name: 'NotAllowedError' })
+  assert.match(getAudioPreviewPlaybackError({ canPlayType: () => 'maybe', error: null }, permission), /Allow sound/)
+})
 
 test('chart preserves the provider rank, full artist name, and original album IDs', () => {
   const entry = {

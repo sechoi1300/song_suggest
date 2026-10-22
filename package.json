@@ -7,7 +7,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "test:music": "tsx --test tests/music.test.ts",
+    "test:music": "tsx --test tests/music.test.ts tests/album-import.test.ts",
     "db:generate": "node --use-system-ca node_modules/prisma/build/index.js generate",
     "db:push": "node --use-system-ca node_modules/prisma/build/index.js db push",
     "db:check": "tsx scripts/check-db.ts",
