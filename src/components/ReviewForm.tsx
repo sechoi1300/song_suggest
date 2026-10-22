@@ -47,7 +47,7 @@ export default function ReviewForm({
   const router = useRouter()
 
   const [mode, setMode] = useState<'FORM' | 'HEAD_TO_HEAD'>('FORM')
-  const [score, setScore] = useState<number>(initialReview?.rating ?? 8.5)
+  const [score, setScore] = useState<number>(initialReview?.rating ?? 9)
   const [targetRank, setTargetRank] = useState<number | undefined>(
     initialReview?.rank ?? undefined
   )
@@ -256,7 +256,7 @@ export default function ReviewForm({
             type="range"
             min="0"
             max="10"
-            step="0.1"
+            step="1"
             value={score}
             onChange={(e) => {
               setScore(parseFloat(e.target.value))
@@ -267,10 +267,7 @@ export default function ReviewForm({
 
           <div className="relative text-[11px] text-stone-500 mt-2 font-mono h-4">
             <span className="absolute left-0">0 Skip</span>
-            <span className="absolute left-[30%] -translate-x-1/2 hidden sm:inline">3 Poor</span>
             <span className="absolute left-[50%] -translate-x-1/2 font-medium text-stone-800">5 OK / Average</span>
-            <span className="absolute left-[70%] -translate-x-1/2">7 Good</span>
-            <span className="absolute left-[85%] -translate-x-1/2 hidden sm:inline">8.5 Great</span>
             <span className="absolute right-0 text-right">10 Exceptional</span>
           </div>
         </div>
